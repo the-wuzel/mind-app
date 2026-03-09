@@ -77,6 +77,10 @@
             ""
         ]
     },
+
+
+
+
     {
         "prompt": "How often do you drink / smoke? What do you think about it?",
         "categories": [
@@ -117,6 +121,36 @@
         "prompt": "What are you saving money for?",
         "categories": [
             ""
+        ]
+    },
+    {
+        "prompt": "What is your favorite virtue?",
+        "categories": [
+            "proust-questionaire"
+        ]
+    },
+    {
+        "prompt": "What is your main fault?",
+        "categories": [
+            "proust-questionaire"
+        ]
+    },
+    {
+        "prompt": "What is your favorite occupation?",
+        "categories": [
+            "proust-questionaire"
+        ]
+    },
+    {
+        "prompt": "What do you appreciate most in your friends?",
+        "categories": [
+            "proust-questionaire"
+        ]
+    },
+    {
+        "prompt": "Where would you like to live?",
+        "categories": [
+            "proust-questionaire"
         ]
     }
 ]

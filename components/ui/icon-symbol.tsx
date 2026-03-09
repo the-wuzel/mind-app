@@ -30,6 +30,9 @@ const MAPPING = {
   'checkmark': 'check',
   'line.3.horizontal': 'menu',
   'gearshape.fill': 'settings',
+  'quote.opening': 'format-quote',
+  'heart.fill': 'favorite',
+  'moon.fill': 'nightlight-round',
 } as IconMapping;
 
 /**

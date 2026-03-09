@@ -7,6 +7,7 @@ import React, { useEffect, useMemo } from 'react';
 import { Dimensions, TouchableOpacity } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
+    cancelAnimation,
     runOnJS,
     useAnimatedStyle,
     useSharedValue,
@@ -24,13 +25,14 @@ interface SnackbarProps {
     onUndo: () => void;
     onDismiss: () => void;
     visible: boolean;
+    duration?: number;
 }
 
 import { useSettings } from '@/context/SettingsContext';
 
 // ... existing imports ...
 
-export function Snackbar({ message, onUndo, onDismiss, visible }: SnackbarProps) {
+export function Snackbar({ message, onUndo, onDismiss, visible, duration = 4000 }: SnackbarProps) {
     const colorScheme = useColorScheme() ?? 'light';
     const { primaryColor } = useSettings();
     const insets = useSafeAreaInsets();
@@ -46,16 +48,38 @@ export function Snackbar({ message, onUndo, onDismiss, visible }: SnackbarProps)
 
     const translateX = useSharedValue(0);
     const opacity = useSharedValue(0);
+    const progress = useSharedValue(0);
 
+    const onDismissRef = React.useRef(onDismiss);
+    useEffect(() => {
+        onDismissRef.current = onDismiss;
+    }, [onDismiss]);
 
     useEffect(() => {
         if (visible) {
             translateX.value = 0;
+            progress.value = 0;
             opacity.value = withTiming(1, { duration: 300 });
+            progress.value = withTiming(1, { duration }, (finished) => {
+                if (finished) {
+                    runOnJS(onDismissRef.current)();
+                }
+            });
         } else {
             opacity.value = withTiming(0, { duration: 300 });
+            cancelAnimation(progress);
+            progress.value = 0;
         }
-    }, [visible]);
+    }, [visible, duration]);
+
+    const progressStyle = useAnimatedStyle(() => {
+        return {
+            transform: [
+                { scaleX: progress.value }
+            ],
+            transformOrigin: 'left' as const,
+        };
+    });
 
     const pan = Gesture.Pan()
         .onChange((event) => {
@@ -97,6 +121,7 @@ export function Snackbar({ message, onUndo, onDismiss, visible }: SnackbarProps)
                         <ThemedText style={styles.undoText}>Undo</ThemedText>
                     </TouchableOpacity>
                 </ThemedView>
+                <Animated.View style={[styles.progressBar, progressStyle]} />
             </Animated.View>
         </GestureDetector>
     );

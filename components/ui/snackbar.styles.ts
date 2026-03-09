@@ -24,6 +24,7 @@ export const createStyles = (theme: 'light' | 'dark', colors: typeof Colors.ligh
         elevation: 8,
         borderWidth: 1,
         borderColor: 'rgba(255,255,255,0.1)', // Keep subtle border for dark bg
+        overflow: 'hidden',
     },
     textContainer: {
         flexDirection: 'row',
@@ -46,5 +47,14 @@ export const createStyles = (theme: 'light' | 'dark', colors: typeof Colors.ligh
         color: colors.primaryButton,
         fontSize: 16,
         fontWeight: '600',
+    },
+    progressBar: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: 4,
+        backgroundColor: colors.primaryButton,
+        opacity: 0.8,
     },
 });

@@ -10,10 +10,11 @@ import { Colors } from '@/constants/theme';
 import { useSettings } from '@/context/SettingsContext';
 import { useSnackbar } from '@/context/SnackbarContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import DraggableFlatList, { RenderItemParams, ScaleDecorator } from 'react-native-draggable-flatlist';
+import { NestableDraggableFlatList, NestableScrollContainer, RenderItemParams, ScaleDecorator } from 'react-native-draggable-flatlist';
 import { createStyles } from './index.styles';
 
 import { deleteGratitude, getDailyPrompt, getDailyQuote, getMorningRoutineItems, getTodayGratitudes, getTodayReflection, isQuoteSaved, removeSavedQuote, saveGratitude, saveQuote, saveReflection, syncMorningRoutineItems, updateGratitude, updateMorningRoutineItemStatus } from '@/services/database';
+import reflectionsData from '@/services/reflection.json';
 
 function useThemeStyles() {
   const colorScheme = useColorScheme() ?? 'light';
@@ -219,7 +220,7 @@ function MorningRoutine() {
 
       {isEditing ? (
         <View style={{ height: 300 }}>
-          <DraggableFlatList
+          <NestableDraggableFlatList
             data={editItems}
             onDragEnd={({ data }) => setEditItems(data)}
             keyExtractor={(item) => item.id.toString()}
@@ -263,13 +264,7 @@ function MorningRoutine() {
   );
 }
 
-const REFLECTIONS = [
-  "What made you smile today?",
-  "What is one thing you learned today?",
-  "How did you take care of yourself today?",
-  "What are you grateful for right now?",
-  "What was the most challenging part of your day, and how did you handle it?"
-];
+const REFLECTIONS = reflectionsData.map((item: { prompt: string }) => item.prompt);
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -543,7 +538,7 @@ export default function HomeScreen() {
           style={{ flex: 1 }}
           keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
         >
-          <ScrollView
+          <NestableScrollContainer
             ref={scrollRef}
             contentContainerStyle={{ paddingBottom: 40 }}
             keyboardShouldPersistTaps="handled"
@@ -567,7 +562,7 @@ export default function HomeScreen() {
             {!isEvening && !showDailyQuote && !showMorningRoutine && (
               <ThemedText style={{ textAlign: 'center', marginTop: 40, opacity: 0.6 }}>No morning activities enabled.</ThemedText>
             )}
-          </ScrollView>
+          </NestableScrollContainer>
         </KeyboardAvoidingView>
       </SafeAreaView>
     </ThemedView>
