@@ -121,9 +121,9 @@ export default function MemoriesScreen() {
             return (
                 <TouchableOpacity onLongPress={() => handleDelete(item)} activeOpacity={0.8}>
                     <ThemedView style={styles.card}>
-                        <View style={styles.labelContainer}>
-                            <ThemedText type="subtitle" style={styles.label}>Evening Reflection</ThemedText>
-                            <IconSymbol name="moon.fill" size={16} color={colors.primaryButton} />
+                        <View style={[styles.labelContainer, { backgroundColor: colors.primaryButton + '26' }]}>
+                            <IconSymbol name="moon.fill" size={14} color={colors.primaryButton} />
+                            <ThemedText style={styles.label}>Evening Reflection</ThemedText>
                         </View>
                         <ThemedText type="defaultSemiBold" style={styles.prompt}>{item.data.prompt}</ThemedText>
                         <ThemedText style={styles.answer}>{item.data.answer}</ThemedText>
@@ -134,9 +134,9 @@ export default function MemoriesScreen() {
             return (
                 <TouchableOpacity onLongPress={() => handleDelete(item)} activeOpacity={0.8}>
                     <ThemedView style={styles.card}>
-                        <View style={styles.labelContainer}>
-                            <ThemedText type="subtitle" style={styles.label}>Daily Gratitude</ThemedText>
-                            <IconSymbol name="heart.fill" size={16} color={colors.primaryButton} />
+                        <View style={[styles.labelContainer, { backgroundColor: colors.primaryButton + '26' }]}>
+                            <IconSymbol name="heart.fill" size={14} color={colors.primaryButton} />
+                            <ThemedText style={styles.label}>Daily Gratitude</ThemedText>
                         </View>
                         <ThemedText style={styles.answer}>{item.data.content}</ThemedText>
                     </ThemedView>
@@ -146,9 +146,9 @@ export default function MemoriesScreen() {
             return (
                 <TouchableOpacity onLongPress={() => handleDelete(item)} activeOpacity={0.8}>
                     <ThemedView style={styles.card}>
-                        <View style={styles.labelContainer}>
-                            <ThemedText type="subtitle" style={styles.label}>Quote of the Day</ThemedText>
-                            <IconSymbol name="quote.opening" size={16} color={colors.primaryButton} />
+                        <View style={[styles.labelContainer, { backgroundColor: colors.primaryButton + '26' }]}>
+                            <IconSymbol name="quote.opening" size={14} color={colors.primaryButton} />
+                            <ThemedText style={styles.label}>Quote of the Day</ThemedText>
                         </View>
                         <ThemedText style={styles.answer}>"{item.data.text}"</ThemedText>
                         <ThemedText style={[styles.answer, { marginTop: 4, fontStyle: 'italic', opacity: 0.7 }]}>- {item.data.author}</ThemedText>
@@ -248,11 +248,16 @@ export const createStyles = (theme: 'light' | 'dark', colors: any) => StyleSheet
     labelContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'space-between',
-        marginBottom: 8,
+        alignSelf: 'flex-start',
+        paddingVertical: 4,
+        paddingLeft: 8,
+        paddingRight: 8,
+        borderRadius: 6,
+        marginBottom: 12,
+        gap: 6,
     },
     label: {
-        fontSize: 14,
+        fontSize: 13,
         fontWeight: 'bold',
         color: colors.primaryButton,
     },

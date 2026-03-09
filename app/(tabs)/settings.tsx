@@ -1,9 +1,9 @@
-import { StyleSheet, Switch, TouchableOpacity } from 'react-native';
+import { useMemo } from 'react';
+import { ScrollView, StyleSheet, Switch, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { IconSymbol } from '@/components/ui/icon-symbol';
 import { ColorPalette, Colors } from '@/constants/theme';
 import { useSettings } from '@/context/SettingsContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
@@ -23,144 +23,203 @@ export default function SettingsScreen() {
         setPrimaryColorIndex,
     } = useSettings();
     const colorScheme = useColorScheme() ?? 'light';
-    const activeThumbColor = '#fff';
-    const activeTrackColor = primaryColor;
+
+    const colors = useMemo(() => ({
+        ...Colors[colorScheme],
+        primaryButton: primaryColor,
+    }), [colorScheme, primaryColor]);
+
+    const styles = useMemo(() => createStyles(colorScheme, colors), [colorScheme, colors]);
+
+    const activeThumbColor = primaryColor;
+    const activeTrackColor = '#ddd';
     const trackColor = { false: '#767577', true: activeTrackColor };
 
     return (
-        <ParallaxScrollView
-            headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
-            headerImage={
-                <IconSymbol
-                    size={310}
-                    color="#808080"
-                    name="gearshape.fill"
-                    style={styles.headerImage}
-                />
-            }>
-            <ThemedView style={styles.titleContainer}>
-                <ThemedText type="title">Settings</ThemedText>
-            </ThemedView>
-            <ThemedView style={styles.contentContainer}>
-                <ThemedView style={styles.section}>
-                    <ThemedText type="subtitle" style={styles.sectionTitle}>Appearance</ThemedText>
-                    <ThemedView style={styles.colorPaletteContainer}>
-                        {ColorPalette.map((color, index) => (
-                            <TouchableOpacity
-                                key={color}
-                                onPress={() => setPrimaryColorIndex(index)}
-                                style={[
-                                    styles.colorOption,
-                                    { backgroundColor: color },
-                                    primaryColorIndex === index && styles.selectedColorOption,
-                                    primaryColorIndex === index && { borderColor: Colors[colorScheme].text }
-                                ]}
-                            />
-                        ))}
+        <ThemedView style={styles.container}>
+            <SafeAreaView style={styles.safeArea} edges={['top']}>
+                <View style={styles.headerContainer}>
+                    <ThemedText type="title">Settings</ThemedText>
+                </View>
+                <ScrollView contentContainerStyle={styles.scrollContent}>
+                    <ThemedView style={styles.contentContainer}>
+                        <View style={styles.section}>
+                            <ThemedText style={styles.sectionTitle}>Appearance</ThemedText>
+                            <ThemedView style={styles.card}>
+                                <View style={styles.colorPaletteContainer}>
+                                    {ColorPalette.map((color, index) => {
+                                        const isSelected = primaryColorIndex === index;
+                                        return (
+                                            <TouchableOpacity
+                                                key={color}
+                                                onPress={() => setPrimaryColorIndex(index)}
+                                                style={styles.colorOptionContainer}
+                                            >
+                                                {isSelected && (
+                                                    <View style={[
+                                                        styles.colorOptionRing,
+                                                        { borderColor: color },
+                                                    ]} />
+                                                )}
+                                                <View style={[
+                                                    styles.colorOptionInner,
+                                                    { backgroundColor: color },
+                                                ]} />
+                                            </TouchableOpacity>
+                                        );
+                                    })}
+                                </View>
+                            </ThemedView>
+                        </View>
+
+                        <View style={styles.section}>
+                            <ThemedText style={styles.sectionTitle}>Morning</ThemedText>
+                            <ThemedView style={styles.card}>
+                                <TouchableOpacity
+                                    style={styles.row}
+                                    activeOpacity={0.7}
+                                    onPress={() => setShowDailyQuote(!showDailyQuote)}
+                                >
+                                    <ThemedText style={styles.label}>Daily Quote</ThemedText>
+                                    <Switch
+                                        trackColor={trackColor}
+                                        thumbColor={activeThumbColor}
+                                        ios_backgroundColor="#3e3e3e"
+                                        onValueChange={setShowDailyQuote}
+                                        value={showDailyQuote}
+                                    />
+                                </TouchableOpacity>
+
+                                <TouchableOpacity
+                                    style={styles.row}
+                                    activeOpacity={0.7}
+                                    onPress={() => setShowMorningRoutine(!showMorningRoutine)}
+                                >
+                                    <ThemedText style={styles.label}>Morning Routine</ThemedText>
+                                    <Switch
+                                        trackColor={trackColor}
+                                        thumbColor={activeThumbColor}
+                                        ios_backgroundColor="#3e3e3e"
+                                        onValueChange={setShowMorningRoutine}
+                                        value={showMorningRoutine}
+                                    />
+                                </TouchableOpacity>
+                            </ThemedView>
+                        </View>
+
+                        <View style={styles.section}>
+                            <ThemedText style={styles.sectionTitle}>Evening</ThemedText>
+                            <ThemedView style={styles.card}>
+                                <TouchableOpacity
+                                    style={styles.row}
+                                    activeOpacity={0.7}
+                                    onPress={() => setShowEveningReflection(!showEveningReflection)}
+                                >
+                                    <ThemedText style={styles.label}>Evening Reflection</ThemedText>
+                                    <Switch
+                                        trackColor={trackColor}
+                                        thumbColor={activeThumbColor}
+                                        ios_backgroundColor="#3e3e3e"
+                                        onValueChange={setShowEveningReflection}
+                                        value={showEveningReflection}
+                                    />
+                                </TouchableOpacity>
+
+                                <TouchableOpacity
+                                    style={styles.row}
+                                    activeOpacity={0.7}
+                                    onPress={() => setShowDailyGratitude(!showDailyGratitude)}
+                                >
+                                    <ThemedText style={styles.label}>Daily Gratitude</ThemedText>
+                                    <Switch
+                                        trackColor={trackColor}
+                                        thumbColor={activeThumbColor}
+                                        ios_backgroundColor="#3e3e3e"
+                                        onValueChange={setShowDailyGratitude}
+                                        value={showDailyGratitude}
+                                    />
+                                </TouchableOpacity>
+                            </ThemedView>
+                        </View>
                     </ThemedView>
-                </ThemedView>
-
-                <ThemedView style={styles.section}>
-                    <ThemedText type="subtitle" style={styles.sectionTitle}>Morning</ThemedText>
-
-                    <ThemedView style={styles.row}>
-                        <ThemedText style={styles.label}>Daily Quote</ThemedText>
-                        <Switch
-                            trackColor={trackColor}
-                            thumbColor={activeThumbColor}
-                            ios_backgroundColor="#3e3e3e"
-                            onValueChange={setShowDailyQuote}
-                            value={showDailyQuote}
-                        />
-                    </ThemedView>
-
-                    <ThemedView style={styles.row}>
-                        <ThemedText style={styles.label}>Morning Routine</ThemedText>
-                        <Switch
-                            trackColor={trackColor}
-                            thumbColor={activeThumbColor}
-                            ios_backgroundColor="#3e3e3e"
-                            onValueChange={setShowMorningRoutine}
-                            value={showMorningRoutine}
-                        />
-                    </ThemedView>
-                </ThemedView>
-
-                <ThemedView style={styles.section}>
-                    <ThemedText type="subtitle" style={styles.sectionTitle}>Evening</ThemedText>
-
-                    <ThemedView style={styles.row}>
-                        <ThemedText style={styles.label}>Evening Reflection</ThemedText>
-                        <Switch
-                            trackColor={trackColor}
-                            thumbColor={activeThumbColor}
-                            ios_backgroundColor="#3e3e3e"
-                            onValueChange={setShowEveningReflection}
-                            value={showEveningReflection}
-                        />
-                    </ThemedView>
-
-                    <ThemedView style={styles.row}>
-                        <ThemedText style={styles.label}>Daily Gratitude</ThemedText>
-                        <Switch
-                            trackColor={trackColor}
-                            thumbColor={activeThumbColor}
-                            ios_backgroundColor="#3e3e3e"
-                            onValueChange={setShowDailyGratitude}
-                            value={showDailyGratitude}
-                        />
-                    </ThemedView>
-                </ThemedView>
-            </ThemedView>
-        </ParallaxScrollView>
+                </ScrollView>
+            </SafeAreaView>
+        </ThemedView>
     );
 }
 
-const styles = StyleSheet.create({
-    headerImage: {
-        color: '#808080',
-        bottom: -90,
-        left: -35,
-        position: 'absolute',
+export const createStyles = (theme: 'light' | 'dark', colors: any) => StyleSheet.create({
+    container: {
+        flex: 1,
     },
-    titleContainer: {
+    safeArea: {
+        flex: 1,
+    },
+    headerContainer: {
         flexDirection: 'row',
-        gap: 8,
+        alignItems: 'baseline',
+        justifyContent: 'space-between',
+        paddingHorizontal: 32,
+        paddingTop: 32,
         paddingBottom: 16,
     },
+    scrollContent: {
+        paddingHorizontal: 32,
+        paddingBottom: 32,
+    },
     contentContainer: {
-        padding: 4,
-        gap: 24,
+        gap: 32,
     },
     section: {
-        gap: 0,
+        marginBottom: 16,
     },
     sectionTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
         marginBottom: 8,
+        color: colors.textPrimary,
+        opacity: 0.9,
+    },
+    card: {
+        padding: 16,
+        borderRadius: 12,
+        borderWidth: 1,
+        backgroundColor: colors.cardBackground,
+        borderColor: colors.cardBorder,
+        gap: 12,
     },
     row: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        paddingVertical: 0,
     },
     label: {
         fontSize: 16,
+        color: colors.textPrimary,
+        opacity: 0.9,
     },
     colorPaletteContainer: {
         flexDirection: 'row',
         flexWrap: 'wrap',
         gap: 12,
-        paddingVertical: 8,
     },
-    colorOption: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
+    colorOptionContainer: {
+        width: 44,
+        height: 44,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    colorOptionRing: {
+        position: 'absolute',
+        width: 44,
+        height: 44,
+        borderRadius: 22,
         borderWidth: 2,
-        borderColor: 'transparent',
     },
-    selectedColorOption: {
-        borderWidth: 3,
+    colorOptionInner: {
+        width: 32,
+        height: 32,
+        borderRadius: 16,
     },
 });
+
