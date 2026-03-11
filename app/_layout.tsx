@@ -11,6 +11,7 @@ import { Colors } from '@/constants/theme';
 import { SettingsProvider } from '@/context/SettingsContext';
 import { SnackbarProvider } from '@/context/SnackbarContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useOnboarding } from '@/hooks/useOnboarding';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -22,6 +23,7 @@ export const unstable_settings = {
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [appIsReady, setAppIsReady] = useState(false);
+  const { isLoading: isOnboardingLoading, hasViewedOnboarding } = useOnboarding();
 
   useEffect(() => {
     async function prepare() {
@@ -31,14 +33,19 @@ export default function RootLayout() {
         console.warn(e);
       } finally {
         setAppIsReady(true);
-        await SplashScreen.hideAsync();
       }
     }
 
     prepare();
   }, []);
 
-  if (!appIsReady) {
+  useEffect(() => {
+    if (appIsReady && !isOnboardingLoading) {
+      SplashScreen.hideAsync();
+    }
+  }, [appIsReady, isOnboardingLoading]);
+
+  if (!appIsReady || isOnboardingLoading) {
     return null;
   }
 
@@ -48,8 +55,14 @@ export default function RootLayout() {
         <SettingsProvider>
           <SnackbarProvider>
             <Stack>
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+              {hasViewedOnboarding ? (
+                <>
+                  <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                  <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+                </>
+              ) : (
+                <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
+              )}
             </Stack>
           </SnackbarProvider>
         </SettingsProvider>
