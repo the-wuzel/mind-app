@@ -11,6 +11,7 @@ import { Colors } from '@/constants/theme';
 import { SettingsProvider } from '@/context/SettingsContext';
 import { SnackbarProvider } from '@/context/SnackbarContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useDailyNotifications } from '@/hooks/useDailyNotifications';
 import { useOnboarding } from '@/hooks/useOnboarding';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -24,6 +25,8 @@ export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [appIsReady, setAppIsReady] = useState(false);
   const { isLoading: isOnboardingLoading, hasViewedOnboarding } = useOnboarding();
+
+  useDailyNotifications();
 
   useEffect(() => {
     async function prepare() {
@@ -54,14 +57,14 @@ export default function RootLayout() {
       <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
         <SettingsProvider>
           <SnackbarProvider>
-            <Stack>
+            <Stack screenOptions={{ headerShown: false }}>
               {hasViewedOnboarding ? (
                 <>
-                  <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                  <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+                  <Stack.Screen name="(tabs)" />
+                  <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal', headerShown: true }} />
                 </>
               ) : (
-                <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
+                <Stack.Screen name="(onboarding)" />
               )}
             </Stack>
           </SnackbarProvider>
