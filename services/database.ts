@@ -68,14 +68,22 @@ export const getAllSettings = async (): Promise<Record<string, any>> => {
         setting_eveningReflection: true,
         setting_dailyGratitude: true,
         setting_primaryColorIndex: 0,
+        setting_morningNotificationEnabled: true,
+        setting_morningNotificationHour: 7,
+        setting_morningNotificationMinute: 0,
+        setting_eveningNotificationEnabled: true,
+        setting_eveningNotificationHour: 18,
+        setting_eveningNotificationMinute: 0,
     };
 
     allRows.forEach(row => {
-        if (row.key === 'setting_primaryColorIndex') {
-            // @ts-ignore - we know this is a number in the DB but typed as generic Record<string, boolean> in this function's return type in the original code, 
-            // but actually the return type of this function needs to be flexible or we cast it. 
-            // The existing return signature is Promise<Record<string, boolean>>. 
-            // I should update the return signature to be more flexible: Promise<Record<string, any>>
+        if (
+            row.key === 'setting_primaryColorIndex' ||
+            row.key === 'setting_morningNotificationHour' ||
+            row.key === 'setting_morningNotificationMinute' ||
+            row.key === 'setting_eveningNotificationHour' ||
+            row.key === 'setting_eveningNotificationMinute'
+        ) {
             settings[row.key] = row.value;
         } else {
             settings[row.key] = !!row.value;

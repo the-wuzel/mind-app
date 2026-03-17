@@ -528,7 +528,7 @@ export default function HomeScreen() {
     }, 100);
   };
 
-  const { showDailyQuote, showMorningRoutine, showEveningReflection, showDailyGratitude } = useSettings();
+  const { preferences: { showDailyQuote, showMorningRoutine, showEveningReflection, showDailyGratitude } } = useSettings();
 
   return (
     <ThemedView style={styles.container}>

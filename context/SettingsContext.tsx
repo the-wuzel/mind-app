@@ -2,17 +2,23 @@ import { ColorPalette } from '@/constants/theme';
 import { getAllSettings, saveSetting } from '@/services/database';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
-type SettingsContextType = {
+export type Preferences = {
     showDailyQuote: boolean;
-    setShowDailyQuote: (value: boolean) => void;
     showMorningRoutine: boolean;
-    setShowMorningRoutine: (value: boolean) => void;
     showEveningReflection: boolean;
-    setShowEveningReflection: (value: boolean) => void;
     showDailyGratitude: boolean;
-    setShowDailyGratitude: (value: boolean) => void;
     primaryColorIndex: number;
-    setPrimaryColorIndex: (index: number) => void;
+    morningNotificationEnabled: boolean;
+    morningNotificationHour: number;
+    morningNotificationMinute: number;
+    eveningNotificationEnabled: boolean;
+    eveningNotificationHour: number;
+    eveningNotificationMinute: number;
+};
+
+type SettingsContextType = {
+    preferences: Preferences;
+    updatePreference: <K extends keyof Preferences>(key: K, value: Preferences[K]) => void;
     primaryColor: string;
     isLoading: boolean;
 };
@@ -20,11 +26,19 @@ type SettingsContextType = {
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
 
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
-    const [showDailyQuote, setShowDailyQuoteState] = useState(true);
-    const [showMorningRoutine, setShowMorningRoutineState] = useState(true);
-    const [showEveningReflection, setShowEveningReflectionState] = useState(true);
-    const [showDailyGratitude, setShowDailyGratitudeState] = useState(true);
-    const [primaryColorIndex, setPrimaryColorIndexState] = useState(0);
+    const [preferences, setPreferences] = useState<Preferences>({
+        showDailyQuote: true,
+        showMorningRoutine: true,
+        showEveningReflection: true,
+        showDailyGratitude: true,
+        primaryColorIndex: 0,
+        morningNotificationEnabled: true,
+        morningNotificationHour: 7,
+        morningNotificationMinute: 0,
+        eveningNotificationEnabled: true,
+        eveningNotificationHour: 18,
+        eveningNotificationMinute: 0,
+    });
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
@@ -34,11 +48,19 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     const loadSettings = async () => {
         try {
             const settings = await getAllSettings();
-            setShowDailyQuoteState(settings.setting_dailyQuote);
-            setShowMorningRoutineState(settings.setting_morningRoutine);
-            setShowEveningReflectionState(settings.setting_eveningReflection);
-            setShowDailyGratitudeState(settings.setting_dailyGratitude);
-            setPrimaryColorIndexState(settings.setting_primaryColorIndex ?? 0);
+            setPreferences({
+                showDailyQuote: settings.setting_dailyQuote ?? true,
+                showMorningRoutine: settings.setting_morningRoutine ?? true,
+                showEveningReflection: settings.setting_eveningReflection ?? true,
+                showDailyGratitude: settings.setting_dailyGratitude ?? true,
+                primaryColorIndex: settings.setting_primaryColorIndex ?? 0,
+                morningNotificationEnabled: settings.setting_morningNotificationEnabled ?? true,
+                morningNotificationHour: settings.setting_morningNotificationHour ?? 7,
+                morningNotificationMinute: settings.setting_morningNotificationMinute ?? 0,
+                eveningNotificationEnabled: settings.setting_eveningNotificationEnabled ?? true,
+                eveningNotificationHour: settings.setting_eveningNotificationHour ?? 18,
+                eveningNotificationMinute: settings.setting_eveningNotificationMinute ?? 0,
+            });
         } catch (e) {
             console.error('Failed to load settings', e);
         } finally {
@@ -46,54 +68,22 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         }
     };
 
-    const updateSetting = async (key: string, value: boolean | number, setter: (v: any) => void) => {
-        setter(value);
+    const updatePreference = async <K extends keyof Preferences>(key: K, value: Preferences[K]) => {
+        setPreferences(prev => ({ ...prev, [key]: value }));
         try {
-            // @ts-ignore - saveSetting expects boolean, but we need to support numbers too now.
-            // We should update saveSetting signature too, but for now we can rely on how it's implemented or update it.
-            // Actually, looking at saveSetting, it does `value ? 1 : 0`. That won't work for index > 1.
-            // I need to update saveSetting in database.ts as well to handle numbers correctly.
-            await saveSetting(key, value as any);
+            await saveSetting(`setting_${key}`, value as any);
         } catch (e) {
             console.error(`Failed to save setting ${key}`, e);
         }
     };
 
-    const setShowDailyQuote = (value: boolean) => {
-        updateSetting('setting_dailyQuote', value, setShowDailyQuoteState);
-    };
-
-    const setShowMorningRoutine = (value: boolean) => {
-        updateSetting('setting_morningRoutine', value, setShowMorningRoutineState);
-    };
-
-    const setShowEveningReflection = (value: boolean) => {
-        updateSetting('setting_eveningReflection', value, setShowEveningReflectionState);
-    };
-
-    const setShowDailyGratitude = (value: boolean) => {
-        updateSetting('setting_dailyGratitude', value, setShowDailyGratitudeState);
-    };
-
-    const setPrimaryColorIndex = (index: number) => {
-        updateSetting('setting_primaryColorIndex', index, setPrimaryColorIndexState);
-    };
-
-    const primaryColor = ColorPalette[primaryColorIndex] || ColorPalette[0];
+    const primaryColor = ColorPalette[preferences.primaryColorIndex] || ColorPalette[0];
 
     return (
         <SettingsContext.Provider
             value={{
-                showDailyQuote,
-                setShowDailyQuote,
-                showMorningRoutine,
-                setShowMorningRoutine,
-                showEveningReflection,
-                setShowEveningReflection,
-                showDailyGratitude,
-                setShowDailyGratitude,
-                primaryColorIndex,
-                setPrimaryColorIndex,
+                preferences,
+                updatePreference,
                 primaryColor,
                 isLoading,
             }}

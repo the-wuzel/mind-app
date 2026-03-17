@@ -4,7 +4,7 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useOnboarding } from '@/hooks/useOnboarding';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Dimensions, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Animated, { useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -30,14 +30,17 @@ const ONBOARDING_STEPS = [
   {
     title: 'Welcome to mindApp',
     subtitle: 'Your personal space for reflection, tracking routines, and building better habits.',
+    image: require('@/assets/images/icon.png'),
   },
   {
     title: 'Morning Routine',
     subtitle: 'Start your day right. Enter the app once every morning to set your intentions and prepare for the day ahead.',
+    image: require('@/assets/images/mascotMorning.png'),
   },
   {
     title: 'Evening Routine',
     subtitle: 'Reflect on your progress. Check in once every evening to log your day, clear your mind, and wind down.',
+    image: require('@/assets/images/mascotNight.png'),
   },
 ];
 
@@ -84,10 +87,15 @@ export default function OnboardingScreen() {
       )}
 
       <View style={styles.content}>
-        <Text style={[styles.title, { color: themeColors.text }]}>{step.title}</Text>
-        <Text style={[styles.subtitle, { color: themeColors.textSecondary }]}>
-          {step.subtitle}
-        </Text>
+        <View style={styles.imageContainer}>
+          <Image source={step.image} style={styles.image} resizeMode="contain" />
+        </View>
+        <View style={styles.textContainer}>
+          <Text style={[styles.title, { color: themeColors.text }]}>{step.title}</Text>
+          <Text style={[styles.subtitle, { color: themeColors.textSecondary }]}>
+            {step.subtitle}
+          </Text>
+        </View>
       </View>
       
       <View style={styles.footer}>
@@ -130,9 +138,23 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+    paddingHorizontal: 24,
+  },
+  imageContainer: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 24,
+    marginTop: 60,
+  },
+  image: {
+    width: width * 0.7,
+    height: width * 0.7,
+    maxHeight: 280,
+  },
+  textContainer: {
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    paddingBottom: 20,
   },
   title: {
     fontSize: 32,

@@ -1,6 +1,7 @@
 import * as Notifications from 'expo-notifications';
 import { useEffect } from 'react';
 import { Platform } from 'react-native';
+import { useSettings } from '@/context/SettingsContext';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -13,7 +14,20 @@ Notifications.setNotificationHandler({
 });
 
 export function useDailyNotifications() {
+  const {
+    preferences: {
+      morningNotificationEnabled,
+      morningNotificationHour,
+      morningNotificationMinute,
+      eveningNotificationEnabled,
+      eveningNotificationHour,
+      eveningNotificationMinute,
+    },
+    isLoading
+  } = useSettings();
+
   useEffect(() => {
+    if (isLoading) return;
     async function configureNotifications() {
       if (Platform.OS === 'web') return;
 
@@ -38,29 +52,33 @@ export function useDailyNotifications() {
 
       await Notifications.cancelAllScheduledNotificationsAsync();
 
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: 'Morning Check-in ☀️',
-          body: "Take a moment to start your day with intention. How are you feeling?",
-        },
-        trigger: {
-          type: Notifications.SchedulableTriggerInputTypes.DAILY,
-          hour: 7,
-          minute: 0,
-        } as Notifications.DailyTriggerInput,
-      });
+      if (morningNotificationEnabled) {
+        await Notifications.scheduleNotificationAsync({
+          content: {
+            title: 'Morning Check-in ☀️',
+            body: "Take a moment to start your day with intention. How are you feeling?",
+          },
+          trigger: {
+            type: Notifications.SchedulableTriggerInputTypes.DAILY,
+            hour: morningNotificationHour,
+            minute: morningNotificationMinute,
+          } as Notifications.DailyTriggerInput,
+        });
+      }
 
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: 'Evening Reflection 🌙',
-          body: "Time to wind down. Reflect on your day and log your thoughts.",
-        },
-        trigger: {
-          type: Notifications.SchedulableTriggerInputTypes.DAILY,
-          hour: 18,
-          minute: 0,
-        } as Notifications.DailyTriggerInput,
-      });
+      if (eveningNotificationEnabled) {
+        await Notifications.scheduleNotificationAsync({
+          content: {
+            title: 'Evening Reflection 🌙',
+            body: "Time to wind down. Reflect on your day and log your thoughts.",
+          },
+          trigger: {
+            type: Notifications.SchedulableTriggerInputTypes.DAILY,
+            hour: eveningNotificationHour,
+            minute: eveningNotificationMinute,
+          } as Notifications.DailyTriggerInput,
+        });
+      }
 
       // TEMPORARY: Test notification 5 seconds from now
       await Notifications.scheduleNotificationAsync({
@@ -77,5 +95,13 @@ export function useDailyNotifications() {
     }
 
     configureNotifications();
-  }, []);
+  }, [
+    isLoading,
+    morningNotificationEnabled,
+    morningNotificationHour,
+    morningNotificationMinute,
+    eveningNotificationEnabled,
+    eveningNotificationHour,
+    eveningNotificationMinute
+  ]);
 }

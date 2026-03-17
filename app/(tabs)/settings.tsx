@@ -1,5 +1,5 @@
-import { useMemo } from 'react';
-import { ScrollView, StyleSheet, Switch, TouchableOpacity, View } from 'react-native';
+import { useMemo, useState } from 'react';
+import { ScrollView, StyleSheet, Switch, TouchableOpacity, View, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
@@ -7,21 +7,24 @@ import { ThemedView } from '@/components/themed-view';
 import { ColorPalette, Colors } from '@/constants/theme';
 import { useSettings } from '@/context/SettingsContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 export default function SettingsScreen() {
+    const { preferences, updatePreference, primaryColor } = useSettings();
     const {
         showDailyQuote,
-        setShowDailyQuote,
         showMorningRoutine,
-        setShowMorningRoutine,
         showEveningReflection,
-        setShowEveningReflection,
         showDailyGratitude,
-        setShowDailyGratitude,
-        primaryColor,
         primaryColorIndex,
-        setPrimaryColorIndex,
-    } = useSettings();
+        morningNotificationEnabled,
+        morningNotificationHour,
+        morningNotificationMinute,
+        eveningNotificationEnabled,
+        eveningNotificationHour,
+        eveningNotificationMinute,
+    } = preferences;
+    
     const colorScheme = useColorScheme() ?? 'light';
 
     const colors = useMemo(() => ({
@@ -34,6 +37,27 @@ export default function SettingsScreen() {
     const activeThumbColor = primaryColor;
     const activeTrackColor = '#ddd';
     const trackColor = { false: '#767577', true: activeTrackColor };
+
+    const [showMorningPicker, setShowMorningPicker] = useState(false);
+    const [showEveningPicker, setShowEveningPicker] = useState(false);
+
+    const formatTime = (hour: number, minute: number) => {
+        const d = new Date();
+        d.setHours(hour, minute);
+        return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    };
+
+    const getMorningDate = () => {
+        const d = new Date();
+        d.setHours(morningNotificationHour, morningNotificationMinute, 0, 0);
+        return d;
+    };
+
+    const getEveningDate = () => {
+        const d = new Date();
+        d.setHours(eveningNotificationHour, eveningNotificationMinute, 0, 0);
+        return d;
+    };
 
     return (
         <ThemedView style={styles.container}>
@@ -52,7 +76,7 @@ export default function SettingsScreen() {
                                         return (
                                             <TouchableOpacity
                                                 key={color}
-                                                onPress={() => setPrimaryColorIndex(index)}
+                                                onPress={() => updatePreference('primaryColorIndex', index)}
                                                 style={styles.colorOptionContainer}
                                             >
                                                 {isSelected && (
@@ -78,14 +102,14 @@ export default function SettingsScreen() {
                                 <TouchableOpacity
                                     style={styles.row}
                                     activeOpacity={0.7}
-                                    onPress={() => setShowDailyQuote(!showDailyQuote)}
+                                    onPress={() => updatePreference('showDailyQuote', !showDailyQuote)}
                                 >
                                     <ThemedText style={styles.label}>Daily Quote</ThemedText>
                                     <Switch
                                         trackColor={trackColor}
                                         thumbColor={activeThumbColor}
                                         ios_backgroundColor="#3e3e3e"
-                                        onValueChange={setShowDailyQuote}
+                                        onValueChange={(val) => updatePreference('showDailyQuote', val)}
                                         value={showDailyQuote}
                                     />
                                 </TouchableOpacity>
@@ -93,14 +117,14 @@ export default function SettingsScreen() {
                                 <TouchableOpacity
                                     style={styles.row}
                                     activeOpacity={0.7}
-                                    onPress={() => setShowMorningRoutine(!showMorningRoutine)}
+                                    onPress={() => updatePreference('showMorningRoutine', !showMorningRoutine)}
                                 >
                                     <ThemedText style={styles.label}>Morning Routine</ThemedText>
                                     <Switch
                                         trackColor={trackColor}
                                         thumbColor={activeThumbColor}
                                         ios_backgroundColor="#3e3e3e"
-                                        onValueChange={setShowMorningRoutine}
+                                        onValueChange={(val) => updatePreference('showMorningRoutine', val)}
                                         value={showMorningRoutine}
                                     />
                                 </TouchableOpacity>
@@ -113,14 +137,14 @@ export default function SettingsScreen() {
                                 <TouchableOpacity
                                     style={styles.row}
                                     activeOpacity={0.7}
-                                    onPress={() => setShowEveningReflection(!showEveningReflection)}
+                                    onPress={() => updatePreference('showEveningReflection', !showEveningReflection)}
                                 >
                                     <ThemedText style={styles.label}>Evening Reflection</ThemedText>
                                     <Switch
                                         trackColor={trackColor}
                                         thumbColor={activeThumbColor}
                                         ios_backgroundColor="#3e3e3e"
-                                        onValueChange={setShowEveningReflection}
+                                        onValueChange={(val) => updatePreference('showEveningReflection', val)}
                                         value={showEveningReflection}
                                     />
                                 </TouchableOpacity>
@@ -128,17 +152,150 @@ export default function SettingsScreen() {
                                 <TouchableOpacity
                                     style={styles.row}
                                     activeOpacity={0.7}
-                                    onPress={() => setShowDailyGratitude(!showDailyGratitude)}
+                                    onPress={() => updatePreference('showDailyGratitude', !showDailyGratitude)}
                                 >
                                     <ThemedText style={styles.label}>Daily Gratitude</ThemedText>
                                     <Switch
                                         trackColor={trackColor}
                                         thumbColor={activeThumbColor}
                                         ios_backgroundColor="#3e3e3e"
-                                        onValueChange={setShowDailyGratitude}
+                                        onValueChange={(val) => updatePreference('showDailyGratitude', val)}
                                         value={showDailyGratitude}
                                     />
                                 </TouchableOpacity>
+                            </ThemedView>
+                        </View>
+                        <View style={styles.section}>
+                            <ThemedText style={styles.sectionTitle}>Notifications</ThemedText>
+                            <ThemedView style={styles.card}>
+                                <TouchableOpacity
+                                    style={styles.row}
+                                    activeOpacity={0.7}
+                                    onPress={() => updatePreference('morningNotificationEnabled', !morningNotificationEnabled)}
+                                >
+                                    <View>
+                                        <ThemedText style={styles.label}>Morning Reminder</ThemedText>
+                                        <ThemedText style={styles.subtext}>Start your day</ThemedText>
+                                    </View>
+                                    <Switch
+                                        trackColor={trackColor}
+                                        thumbColor={activeThumbColor}
+                                        ios_backgroundColor="#3e3e3e"
+                                        onValueChange={(val) => updatePreference('morningNotificationEnabled', val)}
+                                        value={morningNotificationEnabled}
+                                    />
+                                </TouchableOpacity>
+
+                                {morningNotificationEnabled && (
+                                    <>
+                                        {Platform.OS === 'ios' ? (
+                                            <View style={styles.row}>
+                                                <ThemedText style={styles.label}>Time</ThemedText>
+                                                <DateTimePicker
+                                                    value={getMorningDate()}
+                                                    mode="time"
+                                                    display="default"
+                                                    onChange={(event, date) => {
+                                                        if (date) {
+                                                            updatePreference('morningNotificationHour', date.getHours());
+                                                            updatePreference('morningNotificationMinute', date.getMinutes());
+                                                        }
+                                                    }}
+                                                    themeVariant={colorScheme}
+                                                />
+                                            </View>
+                                        ) : (
+                                            <TouchableOpacity 
+                                                style={styles.row}
+                                                onPress={() => setShowMorningPicker(true)}
+                                            >
+                                                <ThemedText style={styles.label}>Time</ThemedText>
+                                                <ThemedText style={styles.timeText}>{formatTime(morningNotificationHour, morningNotificationMinute)}</ThemedText>
+                                            </TouchableOpacity>
+                                        )}
+                                        {Platform.OS === 'android' && showMorningPicker && (
+                                            <DateTimePicker
+                                                value={getMorningDate()}
+                                                mode="time"
+                                                is24Hour={true}
+                                                display="default"
+                                                onChange={(event, date) => {
+                                                    setShowMorningPicker(false);
+                                                    if (date) {
+                                                        updatePreference('morningNotificationHour', date.getHours());
+                                                        updatePreference('morningNotificationMinute', date.getMinutes());
+                                                    }
+                                                }}
+                                            />
+                                        )}
+                                    </>
+                                )}
+
+                                <View style={styles.divider} />
+
+                                <TouchableOpacity
+                                    style={styles.row}
+                                    activeOpacity={0.7}
+                                    onPress={() => updatePreference('eveningNotificationEnabled', !eveningNotificationEnabled)}
+                                >
+                                    <View>
+                                        <ThemedText style={styles.label}>Evening Reminder</ThemedText>
+                                        <ThemedText style={styles.subtext}>Reflect on your day</ThemedText>
+                                    </View>
+                                    <Switch
+                                        trackColor={trackColor}
+                                        thumbColor={activeThumbColor}
+                                        ios_backgroundColor="#3e3e3e"
+                                        onValueChange={(val) => updatePreference('eveningNotificationEnabled', val)}
+                                        value={eveningNotificationEnabled}
+                                    />
+                                </TouchableOpacity>
+
+                                {eveningNotificationEnabled && (
+                                    <>
+                                        {Platform.OS === 'ios' ? (
+                                            <View style={styles.row}>
+                                                <ThemedText style={styles.label}>Time</ThemedText>
+                                                <DateTimePicker
+                                                    value={getEveningDate()}
+                                                    mode="time"
+                                                    display="default"
+                                                    onChange={(event, date) => {
+                                                        if (date) {
+                                                            updatePreference('eveningNotificationHour', date.getHours());
+                                                            updatePreference('eveningNotificationMinute', date.getMinutes());
+                                                        }
+                                                    }}
+                                                    themeVariant={colorScheme}
+                                                />
+                                            </View>
+                                        ) : (
+                                            <TouchableOpacity 
+                                                style={styles.row}
+                                                onPress={() => setShowEveningPicker(true)}
+                                            >
+                                                <ThemedText style={styles.label}>Time</ThemedText>
+                                                <ThemedText style={styles.timeText}>{formatTime(eveningNotificationHour, eveningNotificationMinute)}</ThemedText>
+                                            </TouchableOpacity>
+                                        )}
+                                        {Platform.OS === 'android' && showEveningPicker && (
+                                            <DateTimePicker
+                                                value={getEveningDate()}
+                                                mode="time"
+                                                is24Hour={true}
+                                                display="default"
+                                                onChange={(event, date) => {
+                                                    setShowEveningPicker(false);
+                                                    if (date) {
+                                                        updatePreference('eveningNotificationHour', date.getHours());
+                                                        updatePreference('eveningNotificationMinute', date.getMinutes());
+                                                    }
+                                                }}
+                                            />
+                                        )}
+                                    </>
+                                )}
+
                             </ThemedView>
                         </View>
                     </ThemedView>
@@ -147,6 +304,7 @@ export default function SettingsScreen() {
         </ThemedView>
     );
 }
+
 
 export const createStyles = (theme: 'light' | 'dark', colors: any) => StyleSheet.create({
     container: {
@@ -197,6 +355,21 @@ export const createStyles = (theme: 'light' | 'dark', colors: any) => StyleSheet
         fontSize: 16,
         color: colors.textPrimary,
         opacity: 0.9,
+    },
+    subtext: {
+        fontSize: 13,
+        color: colors.textSecondary,
+        marginTop: 2,
+    },
+    timeText: {
+        fontSize: 16,
+        color: colors.textPrimary,
+        fontWeight: '500',
+    },
+    divider: {
+        height: 1,
+        backgroundColor: colors.cardBorder,
+        marginVertical: 4,
     },
     colorPaletteContainer: {
         flexDirection: 'row',

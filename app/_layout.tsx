@@ -21,12 +21,15 @@ export const unstable_settings = {
   anchor: '(tabs)',
 };
 
+function NotificationSetup() {
+  useDailyNotifications();
+  return null;
+}
+
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [appIsReady, setAppIsReady] = useState(false);
   const { isLoading: isOnboardingLoading, hasViewedOnboarding } = useOnboarding();
-
-  useDailyNotifications();
 
   useEffect(() => {
     async function prepare() {
@@ -57,6 +60,7 @@ export default function RootLayout() {
       <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
         <SettingsProvider>
           <SnackbarProvider>
+            <NotificationSetup />
             <Stack screenOptions={{ headerShown: false }}>
               {hasViewedOnboarding ? (
                 <>
