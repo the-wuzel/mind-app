@@ -502,7 +502,7 @@ function ReflectionPrompt() {
 
 export default function HomeScreen() {
   const [hours, setHours] = useState(new Date().getHours());
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<any>(null);
   const { styles } = useThemeStyles();
 
   useEffect(() => {

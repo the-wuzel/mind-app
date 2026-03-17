@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, Switch, TouchableOpacity, View, Platform } from 'react-native';
+import { Platform, ScrollView, StyleSheet, Switch, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
@@ -23,6 +23,7 @@ export default function SettingsScreen() {
         eveningNotificationEnabled,
         eveningNotificationHour,
         eveningNotificationMinute,
+        isDarkMode,
     } = preferences;
     
     const colorScheme = useColorScheme() ?? 'light';
@@ -70,6 +71,7 @@ export default function SettingsScreen() {
                         <View style={styles.section}>
                             <ThemedText style={styles.sectionTitle}>Appearance</ThemedText>
                             <ThemedView style={styles.card}>
+                                <ThemedText style={styles.label}>Accent Color</ThemedText>
                                 <View style={styles.colorPaletteContainer}>
                                     {ColorPalette.map((color, index) => {
                                         const isSelected = primaryColorIndex === index;
@@ -93,6 +95,26 @@ export default function SettingsScreen() {
                                         );
                                     })}
                                 </View>
+                                
+                                <View style={styles.divider} />
+
+                                <TouchableOpacity
+                                    style={styles.row}
+                                    activeOpacity={0.7}
+                                    onPress={() => updatePreference('isDarkMode', !isDarkMode)}
+                                >
+                                    <View>
+                                        <ThemedText style={styles.label}>Dark Mode</ThemedText>
+                                        <ThemedText style={styles.subtext}>Switch between light and dark themes</ThemedText>
+                                    </View>
+                                    <Switch
+                                        trackColor={trackColor}
+                                        thumbColor={activeThumbColor}
+                                        ios_backgroundColor="#3e3e3e"
+                                        onValueChange={(val) => updatePreference('isDarkMode', val)}
+                                        value={isDarkMode}
+                                    />
+                                </TouchableOpacity>
                             </ThemedView>
                         </View>
 

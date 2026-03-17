@@ -14,6 +14,7 @@ export type Preferences = {
     eveningNotificationEnabled: boolean;
     eveningNotificationHour: number;
     eveningNotificationMinute: number;
+    isDarkMode: boolean;
 };
 
 type SettingsContextType = {
@@ -38,6 +39,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         eveningNotificationEnabled: true,
         eveningNotificationHour: 18,
         eveningNotificationMinute: 0,
+        isDarkMode: false,
     });
     const [isLoading, setIsLoading] = useState(true);
 
@@ -60,6 +62,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
                 eveningNotificationEnabled: settings.setting_eveningNotificationEnabled ?? true,
                 eveningNotificationHour: settings.setting_eveningNotificationHour ?? 18,
                 eveningNotificationMinute: settings.setting_eveningNotificationMinute ?? 0,
+                isDarkMode: settings.setting_isDarkMode ?? false,
             });
         } catch (e) {
             console.error('Failed to load settings', e);

@@ -74,6 +74,7 @@ export const getAllSettings = async (): Promise<Record<string, any>> => {
         setting_eveningNotificationEnabled: true,
         setting_eveningNotificationHour: 18,
         setting_eveningNotificationMinute: 0,
+        setting_isDarkMode: false,
     };
 
     allRows.forEach(row => {

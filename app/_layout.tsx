@@ -27,7 +27,6 @@ function NotificationSetup() {
 }
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
   const [appIsReady, setAppIsReady] = useState(false);
   const { isLoading: isOnboardingLoading, hasViewedOnboarding } = useOnboarding();
 
@@ -57,24 +56,32 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <SettingsProvider>
-          <SnackbarProvider>
-            <NotificationSetup />
-            <Stack screenOptions={{ headerShown: false }}>
-              {hasViewedOnboarding ? (
-                <>
-                  <Stack.Screen name="(tabs)" />
-                  <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal', headerShown: true }} />
-                </>
-              ) : (
-                <Stack.Screen name="(onboarding)" />
-              )}
-            </Stack>
-          </SnackbarProvider>
-        </SettingsProvider>
-        <StatusBar style="auto" backgroundColor={Colors[colorScheme ?? 'light'].background} />
-      </ThemeProvider>
+      <SettingsProvider>
+        <RootLayoutContent hasViewedOnboarding={hasViewedOnboarding} />
+      </SettingsProvider>
     </GestureHandlerRootView>
+  );
+}
+
+function RootLayoutContent({ hasViewedOnboarding }: { hasViewedOnboarding: boolean | null }) {
+  const colorScheme = useColorScheme();
+
+  return (
+    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+      <SnackbarProvider>
+        <NotificationSetup />
+        <Stack screenOptions={{ headerShown: false }}>
+          {hasViewedOnboarding ? (
+            <>
+              <Stack.Screen name="(tabs)" />
+              <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal', headerShown: true }} />
+            </>
+          ) : (
+            <Stack.Screen name="(onboarding)" />
+          )}
+        </Stack>
+      </SnackbarProvider>
+      <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} backgroundColor={Colors[colorScheme ?? 'light'].background} />
+    </ThemeProvider>
   );
 }
