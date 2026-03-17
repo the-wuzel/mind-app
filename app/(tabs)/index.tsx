@@ -35,17 +35,19 @@ function QuoteOfTheDay() {
   const [isSaved, setIsSaved] = useState(false);
   const { styles, colors } = useThemeStyles();
 
-  useEffect(() => {
-    async function loadQuote() {
-      const dailyQuote = await getDailyQuote();
-      setQuote(dailyQuote);
-      if (dailyQuote.text) {
-        const saved = await isQuoteSaved(dailyQuote.text, dailyQuote.author);
-        setIsSaved(saved);
+  useFocusEffect(
+    useCallback(() => {
+      async function loadQuote() {
+        const dailyQuote = await getDailyQuote();
+        setQuote(dailyQuote);
+        if (dailyQuote.text) {
+          const saved = await isQuoteSaved(dailyQuote.text, dailyQuote.author);
+          setIsSaved(saved);
+        }
       }
-    }
-    loadQuote();
-  }, []);
+      loadQuote();
+    }, [])
+  );
 
   const { showSnackbar } = useSnackbar();
 

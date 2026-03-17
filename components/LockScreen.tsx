@@ -1,10 +1,11 @@
 import { useMemo, useState, useEffect } from 'react';
-import { StyleSheet, TouchableOpacity, View, Dimensions } from 'react-native';
+import { StyleSheet, TouchableOpacity, View, Dimensions, Alert } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { ConfirmationModal } from '@/components/ui/confirmation-modal';
 import { Colors } from '@/constants/theme';
 import { useAuth } from '@/context/AuthContext';
 import { useSettings } from '@/context/SettingsContext';
@@ -13,13 +14,15 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 const { width } = Dimensions.get('window');
 
 export function LockScreen() {
-    const { verifyPIN, isBiometricsEnabled, authenticateWithBiometrics, hasBiometricHardware, getLockoutState, pinLength } = useAuth();
+    const { verifyPIN, isBiometricsEnabled, authenticateWithBiometrics, hasBiometricHardware, getLockoutState, pinLength, recoveryEndTime, startRecovery, cancelRecovery, removePIN } = useAuth();
     const { primaryColor } = useSettings();
     const colorScheme = useColorScheme() ?? 'light';
     const [pin, setPin] = useState<string>('');
     const [shake, setShake] = useState(false); // Can be used to animate later if desired
     const [errorMsg, setErrorMsg] = useState('');
     const [lockoutTimeLeft, setLockoutTimeLeft] = useState<number | null>(null);
+    const [recoveryTimeLeft, setRecoveryTimeLeft] = useState<number | null>(null);
+    const [isRecoveryModalVisible, setIsRecoveryModalVisible] = useState(false);
 
     const colors = useMemo(() => ({
         ...Colors[colorScheme],
@@ -53,10 +56,30 @@ export function LockScreen() {
     }, [isBiometricsEnabled, hasBiometricHardware, lockoutTimeLeft]);
 
     useEffect(() => {
-        if (pin.length === pinLength && !lockoutTimeLeft) {
+        if (pin.length === pinLength && !lockoutTimeLeft && !recoveryEndTime) {
             handleVerifyPin(pin);
         }
-    }, [pin, lockoutTimeLeft, pinLength]);
+    }, [pin, lockoutTimeLeft, pinLength, recoveryEndTime]);
+
+    useEffect(() => {
+        if (recoveryEndTime) {
+            const updateTimer = () => {
+                const timeLeft = Math.ceil((recoveryEndTime - Date.now()) / 1000);
+                if (timeLeft > 0) {
+                    setRecoveryTimeLeft(timeLeft);
+                } else {
+                    setRecoveryTimeLeft(null);
+                    // Timer finished while on this screen!
+                    removePIN();
+                }
+            };
+            updateTimer();
+            const interval = setInterval(updateTimer, 1000);
+            return () => clearInterval(interval);
+        } else {
+            setRecoveryTimeLeft(null);
+        }
+    }, [recoveryEndTime, removePIN]);
 
     const checkLockout = async () => {
         const lockoutTime = await getLockoutState();
@@ -138,6 +161,21 @@ export function LockScreen() {
         return <View style={styles.dotsContainer}>{dots}</View>;
     };
 
+    const handleForgotPin = () => {
+        setIsRecoveryModalVisible(true);
+    };
+
+    const handleConfirmRecovery = () => {
+        setIsRecoveryModalVisible(false);
+        startRecovery();
+    };
+
+    const formatTime = (seconds: number) => {
+        const m = Math.floor(seconds / 60);
+        const s = seconds % 60;
+        return `${m}:${s.toString().padStart(2, '0')}`;
+    };
+
     const NumberPad = () => {
         const rows = [
             [1, 2, 3],
@@ -195,6 +233,26 @@ export function LockScreen() {
         );
     };
 
+    if (recoveryTimeLeft !== null) {
+        return (
+            <ThemedView style={styles.container}>
+                <View style={styles.content}>
+                    <MaterialCommunityIcons name="timer-sand" size={64} color={colors.primaryButton} />
+                    <ThemedText style={styles.title}>Recovery in Progress</ThemedText>
+                    <ThemedText style={styles.subtitle}>
+                        You can access the app in {formatTime(recoveryTimeLeft)}
+                    </ThemedText>
+                    <TouchableOpacity
+                        style={styles.forgotPinButton}
+                        onPress={cancelRecovery}
+                    >
+                        <ThemedText style={styles.forgotPinText}>Cancel Recovery</ThemedText>
+                    </TouchableOpacity>
+                </View>
+            </ThemedView>
+        );
+    }
+
     return (
         <ThemedView style={styles.container}>
             <View style={styles.content}>
@@ -210,7 +268,20 @@ export function LockScreen() {
                 </ThemedText>
 
                 <NumberPad />
+
+                <TouchableOpacity style={styles.forgotPinButton} onPress={handleForgotPin}>
+                    <ThemedText style={styles.forgotPinText}>Forgot PIN?</ThemedText>
+                </TouchableOpacity>
             </View>
+
+            <ConfirmationModal
+                visible={isRecoveryModalVisible}
+                onClose={() => setIsRecoveryModalVisible(false)}
+                onConfirm={handleConfirmRecovery}
+                title="Recover Password"
+                message={"This will lock the app for 30 minutes. After that, your PIN and biometrics will be removed and you will regain full access.\n\nDo you want to continue?"}
+                confirmText="Start Recovery"
+            />
         </ThemedView>
     );
 }
@@ -289,5 +360,14 @@ const createStyles = (theme: 'light' | 'dark', colors: any) => StyleSheet.create
     numberText: {
         fontSize: 28,
         fontWeight: '500',
+    },
+    forgotPinButton: {
+        marginTop: 32,
+        padding: 8,
+    },
+    forgotPinText: {
+        color: colors.primaryButton,
+        fontSize: 16,
+        fontWeight: '600',
     },
 });

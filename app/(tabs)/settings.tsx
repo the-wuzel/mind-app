@@ -45,9 +45,12 @@ export default function SettingsScreen() {
 
     const styles = useMemo(() => createStyles(colorScheme, colors), [colorScheme, colors]);
 
-    const activeThumbColor = primaryColor;
-    const activeTrackColor = '#ddd';
-    const trackColor = { false: '#767577', true: activeTrackColor };
+    const trackColor = { 
+        false: colorScheme === 'dark' ? '#767577' : '#e9e9ea', 
+        true: primaryColor
+    };
+    const activeThumbColor = colorScheme === 'dark' ? '#3e3e3e' : '#ffffff';
+    const iosBackgroundColor = colorScheme === 'dark' ? '#3e3e3e' : '#e9e9ea';
 
     const [showMorningPicker, setShowMorningPicker] = useState(false);
     const [showEveningPicker, setShowEveningPicker] = useState(false);
@@ -99,7 +102,7 @@ export default function SettingsScreen() {
                                     <Switch
                                         trackColor={trackColor}
                                         thumbColor={activeThumbColor}
-                                        ios_backgroundColor="#3e3e3e"
+                                        ios_backgroundColor={iosBackgroundColor}
                                         onValueChange={(val) => {
                                             if (val) {
                                                 router.push('/pin-setup');
@@ -126,7 +129,7 @@ export default function SettingsScreen() {
                                             <Switch
                                                 trackColor={trackColor}
                                                 thumbColor={activeThumbColor}
-                                                ios_backgroundColor="#3e3e3e"
+                                                ios_backgroundColor={iosBackgroundColor}
                                                 onValueChange={(val) => toggleBiometrics(val)}
                                                 value={isBiometricsEnabled}
                                             />
@@ -178,7 +181,7 @@ export default function SettingsScreen() {
                                     <Switch
                                         trackColor={trackColor}
                                         thumbColor={activeThumbColor}
-                                        ios_backgroundColor="#3e3e3e"
+                                        ios_backgroundColor={iosBackgroundColor}
                                         onValueChange={(val) => updatePreference('isDarkMode', val)}
                                         value={isDarkMode}
                                     />
@@ -198,7 +201,7 @@ export default function SettingsScreen() {
                                     <Switch
                                         trackColor={trackColor}
                                         thumbColor={activeThumbColor}
-                                        ios_backgroundColor="#3e3e3e"
+                                        ios_backgroundColor={iosBackgroundColor}
                                         onValueChange={(val) => updatePreference('showDailyQuote', val)}
                                         value={showDailyQuote}
                                     />
@@ -213,7 +216,7 @@ export default function SettingsScreen() {
                                     <Switch
                                         trackColor={trackColor}
                                         thumbColor={activeThumbColor}
-                                        ios_backgroundColor="#3e3e3e"
+                                        ios_backgroundColor={iosBackgroundColor}
                                         onValueChange={(val) => updatePreference('showMorningRoutine', val)}
                                         value={showMorningRoutine}
                                     />
@@ -233,7 +236,7 @@ export default function SettingsScreen() {
                                     <Switch
                                         trackColor={trackColor}
                                         thumbColor={activeThumbColor}
-                                        ios_backgroundColor="#3e3e3e"
+                                        ios_backgroundColor={iosBackgroundColor}
                                         onValueChange={(val) => updatePreference('showEveningReflection', val)}
                                         value={showEveningReflection}
                                     />
@@ -248,7 +251,7 @@ export default function SettingsScreen() {
                                     <Switch
                                         trackColor={trackColor}
                                         thumbColor={activeThumbColor}
-                                        ios_backgroundColor="#3e3e3e"
+                                        ios_backgroundColor={iosBackgroundColor}
                                         onValueChange={(val) => updatePreference('showDailyGratitude', val)}
                                         value={showDailyGratitude}
                                     />
@@ -270,7 +273,7 @@ export default function SettingsScreen() {
                                     <Switch
                                         trackColor={trackColor}
                                         thumbColor={activeThumbColor}
-                                        ios_backgroundColor="#3e3e3e"
+                                        ios_backgroundColor={iosBackgroundColor}
                                         onValueChange={(val) => updatePreference('morningNotificationEnabled', val)}
                                         value={morningNotificationEnabled}
                                     />
@@ -335,7 +338,7 @@ export default function SettingsScreen() {
                                     <Switch
                                         trackColor={trackColor}
                                         thumbColor={activeThumbColor}
-                                        ios_backgroundColor="#3e3e3e"
+                                        ios_backgroundColor={iosBackgroundColor}
                                         onValueChange={(val) => updatePreference('eveningNotificationEnabled', val)}
                                         value={eveningNotificationEnabled}
                                     />

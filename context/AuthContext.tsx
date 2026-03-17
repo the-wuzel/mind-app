@@ -9,9 +9,11 @@ const APP_PIN_LENGTH_KEY = 'APP_PIN_LENGTH';
 const APP_BIOMETRICS_ENABLED_KEY = 'APP_BIOMETRICS_ENABLED';
 const APP_LOCKOUT_TIME_KEY = 'APP_LOCKOUT_TIME';
 const FAILED_ATTEMPTS_KEY = 'APP_FAILED_ATTEMPTS';
+const APP_RECOVERY_TIME_KEY = 'APP_RECOVERY_TIME';
 
 const MAX_FAILED_ATTEMPTS = 5;
 const LOCKOUT_DURATION_MS = 30 * 1000; // 30 seconds
+const RECOVERY_DURATION_MS = 30 * 60 * 1000; // 30 minutes
 
 // Helper functions to handle cross-platform storage
 const setStorageItem = async (key: string, value: string) => {
@@ -45,6 +47,7 @@ type AuthContextType = {
     isBiometricsEnabled: boolean;
     hasBiometricHardware: boolean;
     isLoading: boolean;
+    recoveryEndTime: number | null;
     setupPIN: (pin: string) => Promise<void>;
     removePIN: () => Promise<void>;
     verifyPIN: (pin: string) => Promise<{ success: boolean; lockoutUntil?: number | null; remainingAttempts?: number }>;
@@ -52,6 +55,8 @@ type AuthContextType = {
     changePinLength: (length: 4 | 6) => Promise<void>;
     toggleBiometrics: (enabled: boolean) => Promise<void>;
     authenticateWithBiometrics: () => Promise<boolean>;
+    startRecovery: () => Promise<void>;
+    cancelRecovery: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -63,6 +68,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [isBiometricsEnabled, setIsBiometricsEnabled] = useState(false);
     const [hasBiometricHardware, setHasBiometricHardware] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+    const [recoveryEndTime, setRecoveryEndTime] = useState<number | null>(null);
 
     useEffect(() => {
         checkSecurityState();
@@ -116,6 +122,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 const biometricsSetting = await getStorageItem(APP_BIOMETRICS_ENABLED_KEY);
                 setIsBiometricsEnabled(biometricsSetting === 'true');
             }
+
+            // Check recovery state
+            const recoveryTimeStr = await getStorageItem(APP_RECOVERY_TIME_KEY);
+            if (recoveryTimeStr) {
+                const recoveryTime = parseInt(recoveryTimeStr, 10);
+                if (Date.now() >= recoveryTime) {
+                    // Recovery is complete, unlock the app
+                    await removePIN();
+                } else {
+                    // Still in recovery mode
+                    setRecoveryEndTime(recoveryTime);
+                }
+            }
         } catch (error) {
             console.error('Error checking security state:', error);
         } finally {
@@ -141,9 +160,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             await deleteStorageItem(APP_BIOMETRICS_ENABLED_KEY);
             await deleteStorageItem(APP_LOCKOUT_TIME_KEY);
             await deleteStorageItem(FAILED_ATTEMPTS_KEY);
+            await deleteStorageItem(APP_RECOVERY_TIME_KEY);
             setIsAppLockEnabled(false);
             setIsAppUnlocked(true);
             setIsBiometricsEnabled(false);
+            setRecoveryEndTime(null);
         } catch (error) {
             console.error('Failed to remove PIN:', error);
             throw error;
@@ -250,6 +271,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     };
 
+    const startRecovery = async () => {
+        try {
+            const endTime = Date.now() + RECOVERY_DURATION_MS;
+            await setStorageItem(APP_RECOVERY_TIME_KEY, endTime.toString());
+            setRecoveryEndTime(endTime);
+        } catch (error) {
+            console.error('Failed to start recovery:', error);
+        }
+    };
+
+    const cancelRecovery = async () => {
+        try {
+            await deleteStorageItem(APP_RECOVERY_TIME_KEY);
+            setRecoveryEndTime(null);
+        } catch (error) {
+            console.error('Failed to cancel recovery:', error);
+        }
+    };
+
     return (
         <AuthContext.Provider
             value={{
@@ -259,6 +299,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 isBiometricsEnabled,
                 hasBiometricHardware,
                 isLoading,
+                recoveryEndTime,
                 setupPIN,
                 removePIN,
                 verifyPIN,
@@ -266,6 +307,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 changePinLength,
                 toggleBiometrics,
                 authenticateWithBiometrics,
+                startRecovery,
+                cancelRecovery,
             }}
         >
             {children}
