@@ -5,9 +5,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { ColorPalette, Colors } from '@/constants/theme';
+import { useAuth } from '@/context/AuthContext';
 import { useSettings } from '@/context/SettingsContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { router } from 'expo-router';
 
 export default function SettingsScreen() {
     const { preferences, updatePreference, primaryColor } = useSettings();
@@ -25,6 +27,14 @@ export default function SettingsScreen() {
         eveningNotificationMinute,
         isDarkMode,
     } = preferences;
+
+    const { 
+        isAppLockEnabled, 
+        isBiometricsEnabled, 
+        hasBiometricHardware, 
+        removePIN, 
+        toggleBiometrics 
+    } = useAuth();
     
     const colorScheme = useColorScheme() ?? 'light';
 
@@ -68,6 +78,64 @@ export default function SettingsScreen() {
                 </View>
                 <ScrollView contentContainerStyle={styles.scrollContent}>
                     <ThemedView style={styles.contentContainer}>
+                        <View style={styles.section}>
+                            <ThemedText style={styles.sectionTitle}>Security</ThemedText>
+                            <ThemedView style={styles.card}>
+                                <TouchableOpacity
+                                    style={styles.row}
+                                    activeOpacity={0.7}
+                                    onPress={() => {
+                                        if (isAppLockEnabled) {
+                                            removePIN();
+                                        } else {
+                                            router.push('/pin-setup');
+                                        }
+                                    }}
+                                >
+                                    <View>
+                                        <ThemedText style={styles.label}>App Lock</ThemedText>
+                                        <ThemedText style={styles.subtext}>Require PIN to open app</ThemedText>
+                                    </View>
+                                    <Switch
+                                        trackColor={trackColor}
+                                        thumbColor={activeThumbColor}
+                                        ios_backgroundColor="#3e3e3e"
+                                        onValueChange={(val) => {
+                                            if (val) {
+                                                router.push('/pin-setup');
+                                            } else {
+                                                removePIN();
+                                            }
+                                        }}
+                                        value={isAppLockEnabled}
+                                    />
+                                </TouchableOpacity>
+
+                                {isAppLockEnabled && hasBiometricHardware && (
+                                    <>
+                                        <View style={styles.divider} />
+                                        <TouchableOpacity
+                                            style={styles.row}
+                                            activeOpacity={0.7}
+                                            onPress={() => toggleBiometrics(!isBiometricsEnabled)}
+                                        >
+                                            <View>
+                                                <ThemedText style={styles.label}>Use Face ID / Touch ID</ThemedText>
+                                                <ThemedText style={styles.subtext}>Unlock with biometrics</ThemedText>
+                                            </View>
+                                            <Switch
+                                                trackColor={trackColor}
+                                                thumbColor={activeThumbColor}
+                                                ios_backgroundColor="#3e3e3e"
+                                                onValueChange={(val) => toggleBiometrics(val)}
+                                                value={isBiometricsEnabled}
+                                            />
+                                        </TouchableOpacity>
+                                    </>
+                                )}
+                            </ThemedView>
+                        </View>
+
                         <View style={styles.section}>
                             <ThemedText style={styles.sectionTitle}>Appearance</ThemedText>
                             <ThemedView style={styles.card}>

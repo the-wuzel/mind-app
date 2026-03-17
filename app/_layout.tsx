@@ -4,6 +4,7 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
+import { View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-reanimated';
 
@@ -13,6 +14,9 @@ import { SnackbarProvider } from '@/context/SnackbarContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useDailyNotifications } from '@/hooks/useDailyNotifications';
 import { useOnboarding } from '@/hooks/useOnboarding';
+
+import { AuthProvider, useAuth } from '@/context/AuthContext';
+import { LockScreen } from '@/components/LockScreen';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -56,30 +60,44 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <SettingsProvider>
-        <RootLayoutContent hasViewedOnboarding={hasViewedOnboarding} />
-      </SettingsProvider>
+      <AuthProvider>
+          <SettingsProvider>
+            <RootLayoutContent hasViewedOnboarding={hasViewedOnboarding} />
+          </SettingsProvider>
+      </AuthProvider>
     </GestureHandlerRootView>
   );
 }
 
 function RootLayoutContent({ hasViewedOnboarding }: { hasViewedOnboarding: boolean | null }) {
   const colorScheme = useColorScheme();
+  const { isAppLockEnabled, isAppUnlocked, isLoading: isAuthLoading } = useAuth();
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <SnackbarProvider>
         <NotificationSetup />
-        <Stack screenOptions={{ headerShown: false }}>
-          {hasViewedOnboarding ? (
-            <>
-              <Stack.Screen name="(tabs)" />
-              <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal', headerShown: true }} />
-            </>
-          ) : (
-            <Stack.Screen name="(onboarding)" />
-          )}
-        </Stack>
+        
+        {/* Render main app logic only if it's unlocked OR app lock is disabled */}
+        <View style={{ flex: 1, display: isAppUnlocked ? 'flex' : 'none' }}>
+           <Stack screenOptions={{ headerShown: false }}>
+             {hasViewedOnboarding ? (
+               <>
+                 <Stack.Screen name="(tabs)" />
+                 <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal', headerShown: true }} />
+                 <Stack.Screen name="pin-setup" options={{ presentation: 'fullScreenModal', headerShown: false }} />
+               </>
+             ) : (
+               <Stack.Screen name="(onboarding)" />
+             )}
+           </Stack>
+        </View>
+
+        {/* LockScreen Overlay */}
+        {isAppLockEnabled && !isAppUnlocked && !isAuthLoading && (
+            <LockScreen />
+        )}
+
       </SnackbarProvider>
       <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} backgroundColor={Colors[colorScheme ?? 'light'].background} />
     </ThemeProvider>

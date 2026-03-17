@@ -135,8 +135,9 @@ export const createStyles = (theme: 'light' | 'dark', colors: typeof Colors.ligh
         marginHorizontal: 20,
         padding: 24,
         borderRadius: 24,
-        backgroundColor: colors.cardBackground, // Using same card background for consistency
-        // Original was slightly different (0.05 vs 0.08 alpha) but unifying is better
+        backgroundColor: colors.cardBackground, 
+        borderWidth: 1,
+        borderColor: colors.cardBorder,
     },
     routineTitle: {
         marginBottom: 16,
