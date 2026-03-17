@@ -14,12 +14,13 @@ const { width } = Dimensions.get('window');
 const PIN_LENGTH = 4;
 
 export function LockScreen() {
-    const { verifyPIN, isBiometricsEnabled, authenticateWithBiometrics, hasBiometricHardware } = useAuth();
+    const { verifyPIN, isBiometricsEnabled, authenticateWithBiometrics, hasBiometricHardware, getLockoutState } = useAuth();
     const { primaryColor } = useSettings();
     const colorScheme = useColorScheme() ?? 'light';
     const [pin, setPin] = useState<string>('');
     const [shake, setShake] = useState(false); // Can be used to animate later if desired
     const [errorMsg, setErrorMsg] = useState('');
+    const [lockoutTimeLeft, setLockoutTimeLeft] = useState<number | null>(null);
 
     const colors = useMemo(() => ({
         ...Colors[colorScheme],
@@ -29,19 +30,48 @@ export function LockScreen() {
     const styles = useMemo(() => createStyles(colorScheme, colors), [colorScheme, colors]);
 
     useEffect(() => {
-        // Trigger biometrics automatically if enabled
-        if (isBiometricsEnabled && hasBiometricHardware) {
-            handleBiometricAuth();
-        }
-    }, [isBiometricsEnabled, hasBiometricHardware]);
+        checkLockout();
+    }, []);
 
     useEffect(() => {
-        if (pin.length === PIN_LENGTH) {
+        let interval: ReturnType<typeof setInterval>;
+        if (lockoutTimeLeft && lockoutTimeLeft > 0) {
+            interval = setInterval(() => {
+                setLockoutTimeLeft(prev => (prev ? prev - 1 : 0));
+            }, 1000);
+        } else if (lockoutTimeLeft === 0) {
+            setLockoutTimeLeft(null);
+            setErrorMsg('');
+        }
+        return () => clearInterval(interval);
+    }, [lockoutTimeLeft]);
+
+    useEffect(() => {
+        // Trigger biometrics automatically if enabled and not locked out
+        if (isBiometricsEnabled && hasBiometricHardware && !lockoutTimeLeft) {
+            handleBiometricAuth();
+        }
+    }, [isBiometricsEnabled, hasBiometricHardware, lockoutTimeLeft]);
+
+    useEffect(() => {
+        if (pin.length === PIN_LENGTH && !lockoutTimeLeft) {
             handleVerifyPin(pin);
         }
-    }, [pin]);
+    }, [pin, lockoutTimeLeft]);
+
+    const checkLockout = async () => {
+        const lockoutTime = await getLockoutState();
+        if (lockoutTime) {
+            const timeLeft = Math.ceil((lockoutTime - Date.now()) / 1000);
+            if (timeLeft > 0) {
+                setLockoutTimeLeft(timeLeft);
+                setErrorMsg('Too many failed attempts.');
+            }
+        }
+    };
 
     const handleBiometricAuth = async () => {
+        if (lockoutTimeLeft) return;
         setErrorMsg('');
         const success = await authenticateWithBiometrics();
         if (!success) {
@@ -50,12 +80,22 @@ export function LockScreen() {
     };
 
     const handleVerifyPin = async (currentPin: string) => {
-        const isValid = await verifyPIN(currentPin);
-        if (isValid) {
+        if (lockoutTimeLeft) return;
+        
+        const result = await verifyPIN(currentPin);
+        if (result.success) {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         } else {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-            setErrorMsg('Incorrect PIN');
+            if (result.lockoutUntil) {
+                const timeLeft = Math.ceil((result.lockoutUntil - Date.now()) / 1000);
+                setLockoutTimeLeft(timeLeft > 0 ? timeLeft : 0);
+                setErrorMsg('Too many failed attempts.');
+            } else if (result.remainingAttempts !== undefined) {
+                setErrorMsg(`Incorrect PIN. ${result.remainingAttempts} attempts left.`);
+            } else {
+                setErrorMsg('Incorrect PIN');
+            }
             setPin('');
             setShake(true);
             setTimeout(() => setShake(false), 500);
@@ -63,6 +103,7 @@ export function LockScreen() {
     };
 
     const handleNumberPress = (num: number) => {
+        if (lockoutTimeLeft) return;
         if (pin.length < PIN_LENGTH) {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
             setErrorMsg('');
@@ -71,6 +112,7 @@ export function LockScreen() {
     };
 
     const handleDelete = () => {
+        if (lockoutTimeLeft) return;
         if (pin.length > 0) {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
             setPin(prev => prev.slice(0, -1));
@@ -162,7 +204,9 @@ export function LockScreen() {
                 </View>
 
                 {renderDots()}
-                <ThemedText style={styles.errorText}>{errorMsg || ' '}</ThemedText>
+                <ThemedText style={styles.errorText}>
+                    {lockoutTimeLeft ? `Try again in ${Math.ceil(lockoutTimeLeft)}s` : (errorMsg || ' ')}
+                </ThemedText>
 
                 <NumberPad />
             </View>
