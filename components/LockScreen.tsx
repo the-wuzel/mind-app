@@ -11,10 +11,9 @@ import { useSettings } from '@/context/SettingsContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 const { width } = Dimensions.get('window');
-const PIN_LENGTH = 4;
 
 export function LockScreen() {
-    const { verifyPIN, isBiometricsEnabled, authenticateWithBiometrics, hasBiometricHardware, getLockoutState } = useAuth();
+    const { verifyPIN, isBiometricsEnabled, authenticateWithBiometrics, hasBiometricHardware, getLockoutState, pinLength } = useAuth();
     const { primaryColor } = useSettings();
     const colorScheme = useColorScheme() ?? 'light';
     const [pin, setPin] = useState<string>('');
@@ -54,10 +53,10 @@ export function LockScreen() {
     }, [isBiometricsEnabled, hasBiometricHardware, lockoutTimeLeft]);
 
     useEffect(() => {
-        if (pin.length === PIN_LENGTH && !lockoutTimeLeft) {
+        if (pin.length === pinLength && !lockoutTimeLeft) {
             handleVerifyPin(pin);
         }
-    }, [pin, lockoutTimeLeft]);
+    }, [pin, lockoutTimeLeft, pinLength]);
 
     const checkLockout = async () => {
         const lockoutTime = await getLockoutState();
@@ -104,8 +103,10 @@ export function LockScreen() {
 
     const handleNumberPress = (num: number) => {
         if (lockoutTimeLeft) return;
-        if (pin.length < PIN_LENGTH) {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        if (pin.length < pinLength) {
+            if (pin.length < pinLength - 1) {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            }
             setErrorMsg('');
             setPin(prev => prev + num);
         }
@@ -122,7 +123,7 @@ export function LockScreen() {
 
     const renderDots = () => {
         const dots = [];
-        for (let i = 0; i < PIN_LENGTH; i++) {
+        for (let i = 0; i < pinLength; i++) {
             const isFilled = i < pin.length;
             dots.push(
                 <View

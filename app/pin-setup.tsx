@@ -12,10 +12,9 @@ import { useSettings } from '@/context/SettingsContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 const { width } = Dimensions.get('window');
-const PIN_LENGTH = 4;
 
 export default function PinSetupScreen() {
-    const { setupPIN } = useAuth();
+    const { setupPIN, pinLength, changePinLength } = useAuth();
     const { primaryColor } = useSettings();
     const colorScheme = useColorScheme() ?? 'light';
     
@@ -35,7 +34,7 @@ export default function PinSetupScreen() {
     const setCurrentPin = step === 'create' ? setPin : setConfirmPin;
 
     useEffect(() => {
-        if (currentPin.length === PIN_LENGTH) {
+        if (currentPin.length === pinLength) {
             if (step === 'create') {
                 // Move to confirm step
                 setStep('confirm');
@@ -65,8 +64,10 @@ export default function PinSetupScreen() {
     };
 
     const handleNumberPress = (num: number) => {
-        if (currentPin.length < PIN_LENGTH) {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        if (currentPin.length < pinLength) {
+            if (step === 'create' || currentPin.length < pinLength - 1) {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            }
             setErrorMsg('');
             setCurrentPin(prev => prev + num);
         }
@@ -82,7 +83,7 @@ export default function PinSetupScreen() {
 
     const renderDots = () => {
         const dots = [];
-        for (let i = 0; i < PIN_LENGTH; i++) {
+        for (let i = 0; i < pinLength; i++) {
             const isFilled = i < currentPin.length;
             dots.push(
                 <View
@@ -159,9 +160,43 @@ export default function PinSetupScreen() {
                         {step === 'create' ? 'Create PIN' : 'Confirm PIN'}
                     </ThemedText>
                     <ThemedText style={styles.subtitle}>
-                        {step === 'create' ? 'Enter a 4-digit PIN' : 'Re-enter your PIN to confirm'}
+                        {step === 'create' ? `Enter a ${pinLength}-digit PIN` : 'Re-enter your PIN to confirm'}
                     </ThemedText>
                 </View>
+
+                {step === 'create' && (
+                    <View style={styles.lengthSelector}>
+                        <TouchableOpacity
+                            style={[
+                                styles.lengthOption,
+                                pinLength === 4 && { backgroundColor: `${colors.primaryButton}20`, borderColor: colors.primaryButton }
+                            ]}
+                            onPress={() => {
+                                changePinLength(4);
+                                setPin('');
+                            }}
+                        >
+                            <ThemedText style={[styles.lengthText, pinLength === 4 && { color: colors.primaryButton, fontWeight: 'bold' }]}>
+                                4 Digits
+                            </ThemedText>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={[
+                                styles.lengthOption,
+                                pinLength === 6 && { backgroundColor: `${colors.primaryButton}20`, borderColor: colors.primaryButton }
+                            ]}
+                            onPress={() => {
+                                changePinLength(6);
+                                setPin('');
+                            }}
+                        >
+                            <ThemedText style={[styles.lengthText, pinLength === 6 && { color: colors.primaryButton, fontWeight: 'bold' }]}>
+                                6 Digits
+                            </ThemedText>
+                        </TouchableOpacity>
+                    </View>
+                )}
 
                 {renderDots()}
                 <ThemedText style={styles.errorText}>{errorMsg || ' '}</ThemedText>
@@ -203,6 +238,22 @@ const createStyles = (theme: 'light' | 'dark', colors: any) => StyleSheet.create
     subtitle: {
         fontSize: 16,
         color: colors.textSecondary,
+    },
+    lengthSelector: {
+        flexDirection: 'row',
+        gap: 16,
+        marginBottom: 24,
+    },
+    lengthOption: {
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: colors.cardBorder,
+        backgroundColor: colors.cardBackground,
+    },
+    lengthText: {
+        fontSize: 14,
     },
     dotsContainer: {
         flexDirection: 'row',

@@ -5,6 +5,7 @@ import { AppState, AppStateStatus, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const APP_PIN_KEY = 'APP_PIN_SECURE_KEY';
+const APP_PIN_LENGTH_KEY = 'APP_PIN_LENGTH';
 const APP_BIOMETRICS_ENABLED_KEY = 'APP_BIOMETRICS_ENABLED';
 const APP_LOCKOUT_TIME_KEY = 'APP_LOCKOUT_TIME';
 const FAILED_ATTEMPTS_KEY = 'APP_FAILED_ATTEMPTS';
@@ -40,6 +41,7 @@ const deleteStorageItem = async (key: string) => {
 type AuthContextType = {
     isAppLockEnabled: boolean;
     isAppUnlocked: boolean;
+    pinLength: 4 | 6;
     isBiometricsEnabled: boolean;
     hasBiometricHardware: boolean;
     isLoading: boolean;
@@ -47,6 +49,7 @@ type AuthContextType = {
     removePIN: () => Promise<void>;
     verifyPIN: (pin: string) => Promise<{ success: boolean; lockoutUntil?: number | null; remainingAttempts?: number }>;
     getLockoutState: () => Promise<number | null>;
+    changePinLength: (length: 4 | 6) => Promise<void>;
     toggleBiometrics: (enabled: boolean) => Promise<void>;
     authenticateWithBiometrics: () => Promise<boolean>;
 };
@@ -56,6 +59,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [isAppLockEnabled, setIsAppLockEnabled] = useState(false);
     const [isAppUnlocked, setIsAppUnlocked] = useState(true);
+    const [pinLength, setPinLength] = useState<4 | 6>(4);
     const [isBiometricsEnabled, setIsBiometricsEnabled] = useState(false);
     const [hasBiometricHardware, setHasBiometricHardware] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
@@ -96,6 +100,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setIsAppLockEnabled(isLocked);
             setIsAppUnlocked(!isLocked); // initially locked if a PIN exists
 
+            // Read PIN length preference (default to 4 if never set, or deduce from savedPin if available)
+            const savedPinLengthStr = await getStorageItem(APP_PIN_LENGTH_KEY);
+            let length: 4 | 6 = 4;
+            if (savedPinLengthStr === '6') {
+                length = 6;
+            } else if (savedPin && savedPin.length === 6) {
+                // Backward compatibility if we saved a 6 digit PIN previously somehow
+                length = 6;
+            }
+            setPinLength(length);
+
             // Check if user enabled biometrics
             if (isLocked) {
                 const biometricsSetting = await getStorageItem(APP_BIOMETRICS_ENABLED_KEY);
@@ -111,6 +126,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const setupPIN = async (pin: string) => {
         try {
             await setStorageItem(APP_PIN_KEY, pin);
+            await setStorageItem(APP_PIN_LENGTH_KEY, pinLength.toString());
             setIsAppLockEnabled(true);
             setIsAppUnlocked(true);
         } catch (error) {
@@ -203,6 +219,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     };
 
+    const changePinLength = async (length: 4 | 6) => {
+        try {
+            await setStorageItem(APP_PIN_LENGTH_KEY, length.toString());
+            setPinLength(length);
+        } catch (error) {
+            console.error('Failed to save PIN length:', error);
+            throw error;
+        }
+    };
+
     const authenticateWithBiometrics = async () => {
         if (Platform.OS === 'web') return false;
 
@@ -229,6 +255,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             value={{
                 isAppLockEnabled,
                 isAppUnlocked,
+                pinLength,
                 isBiometricsEnabled,
                 hasBiometricHardware,
                 isLoading,
@@ -236,6 +263,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 removePIN,
                 verifyPIN,
                 getLockoutState,
+                changePinLength,
                 toggleBiometrics,
                 authenticateWithBiometrics,
             }}
