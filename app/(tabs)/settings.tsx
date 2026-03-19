@@ -10,6 +10,8 @@ import { useSettings } from '@/context/SettingsContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { router } from 'expo-router';
+import { exportDatabase } from '@/services/database';
+import { Alert } from 'react-native';
 
 export default function SettingsScreen() {
     const { preferences, updatePreference, primaryColor } = useSettings();
@@ -389,6 +391,27 @@ export default function SettingsScreen() {
                                     </>
                                 )}
 
+                            </ThemedView>
+                        </View>
+                        
+                        <View style={styles.section}>
+                            <ThemedText style={styles.sectionTitle}>Data Management</ThemedText>
+                            <ThemedView style={styles.card}>
+                                <TouchableOpacity
+                                    style={styles.row}
+                                    activeOpacity={0.7}
+                                    onPress={async () => {
+                                        const success = await exportDatabase();
+                                        if (!success) {
+                                            Alert.alert("Error", "Could not export database. Sharing might not be available.");
+                                        }
+                                    }}
+                                >
+                                    <View>
+                                        <ThemedText style={styles.label}>Export Backup</ThemedText>
+                                        <ThemedText style={styles.subtext}>Save your reflections and settings</ThemedText>
+                                    </View>
+                                </TouchableOpacity>
                             </ThemedView>
                         </View>
                     </ThemedView>

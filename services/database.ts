@@ -339,3 +339,58 @@ export const updateMorningRoutineItemStatus = async (id: number, checked: boolea
         [checked ? 1 : 0, id]
     );
 };
+
+import { File, Paths } from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
+
+export const exportDatabase = async () => {
+    try {
+        const canShare = await Sharing.isAvailableAsync();
+        if (!canShare) {
+            console.error("Sharing is not available on this device");
+            return false;
+        }
+
+        const db = await getDb();
+        // In Expo SDK 50+, db object contains databasePath
+        let dbFilePath = (db as any).databasePath;
+        let dbFile: File;
+        
+        if (dbFilePath) {
+            const dbUri = dbFilePath.startsWith('file://') ? dbFilePath : `file://${dbFilePath}`;
+            dbFile = new File(dbUri);
+        } else {
+            // Fallback
+            dbFile = new File(Paths.document, 'SQLite', 'mindApp.db');
+        }
+
+        if (!dbFile.exists) {
+            console.error("Database file does not exist at:", dbFile.uri);
+            return false;
+        }
+
+        // Copy it to a temporary location to ensure it has a good name and is accessible
+        const backupFileName = `mindApp_backup_${new Date().toISOString().split('T')[0]}.db`;
+        const backupFile = new File(Paths.cache, backupFileName);
+        
+        // If there's an old backup, overwrite by copying? 
+        // File.copy doesn't take 'overwrite', but File.delete() does if it exists.
+        if (backupFile.exists) {
+            backupFile.delete();
+        }
+        
+        dbFile.copy(backupFile);
+
+        const shareUri = backupFile.uri.startsWith('file://') ? backupFile.uri : `file://${backupFile.uri}`;
+
+        await Sharing.shareAsync(shareUri, {
+            mimeType: 'application/octet-stream', // Safer generic mime type for database files
+            dialogTitle: 'Export Database Backup'
+        });
+
+        return true;
+    } catch (error) {
+        console.error("Error exporting database:", error);
+        return false;
+    }
+};
