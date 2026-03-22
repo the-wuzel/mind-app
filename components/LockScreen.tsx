@@ -306,7 +306,7 @@ const createStyles = (theme: 'light' | 'dark', colors: any) => StyleSheet.create
     },
     title: {
         fontSize: 24,
-        fontWeight: 'bold',
+        fontFamily: 'PlusJakartaSans-Bold',
         marginTop: 16,
         marginBottom: 8,
     },
@@ -359,7 +359,7 @@ const createStyles = (theme: 'light' | 'dark', colors: any) => StyleSheet.create
     },
     numberText: {
         fontSize: 28,
-        fontWeight: '500',
+        fontFamily: 'PlusJakartaSans-SemiBold',
     },
     forgotPinButton: {
         marginTop: 32,
@@ -368,6 +368,6 @@ const createStyles = (theme: 'light' | 'dark', colors: any) => StyleSheet.create
     forgotPinText: {
         color: colors.primaryButton,
         fontSize: 16,
-        fontWeight: '600',
+        fontFamily: 'PlusJakartaSans-SemiBold',
     },
 });

@@ -218,7 +218,7 @@ export const createStyles = (theme: 'light' | 'dark', colors: any) => StyleSheet
     },
     statsText: {
         fontSize: 16,
-        fontWeight: '600',
+        fontFamily: 'PlusJakartaSans-SemiBold',
         color: colors.textSecondary,
         opacity: 0.8,
     },
@@ -240,7 +240,7 @@ export const createStyles = (theme: 'light' | 'dark', colors: any) => StyleSheet
     },
     sectionHeader: {
         fontSize: 18,
-        fontWeight: 'bold',
+        fontFamily: 'PlusJakartaSans-Bold',
         marginTop: 24,
         marginBottom: 8,
         color: colors.textPrimary,
@@ -258,7 +258,7 @@ export const createStyles = (theme: 'light' | 'dark', colors: any) => StyleSheet
     },
     label: {
         fontSize: 13,
-        fontWeight: 'bold',
+        fontFamily: 'PlusJakartaSans-Bold',
         color: colors.primaryButton,
     },
     answer: {

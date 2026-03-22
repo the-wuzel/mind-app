@@ -4,6 +4,7 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
+import { useFonts } from 'expo-font';
 import { View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-reanimated';
@@ -33,6 +34,13 @@ function NotificationSetup() {
 export default function RootLayout() {
   const [appIsReady, setAppIsReady] = useState(false);
   const { isLoading: isOnboardingLoading, hasViewedOnboarding } = useOnboarding();
+  const [fontsLoaded] = useFonts({
+    'PlusJakartaSans-Regular': require('../assets/fonts/Plus_Jakarta_Sans/static/PlusJakartaSans-Regular.ttf'),
+    'PlusJakartaSans-SemiBold': require('../assets/fonts/Plus_Jakarta_Sans/static/PlusJakartaSans-SemiBold.ttf'),
+    'PlusJakartaSans-Bold': require('../assets/fonts/Plus_Jakarta_Sans/static/PlusJakartaSans-Bold.ttf'),
+    'PlayfairDisplay-Regular': require('../assets/fonts/Playfair_Display/static/PlayfairDisplay-Regular.ttf'),
+    'PlayfairDisplay-Bold': require('../assets/fonts/Playfair_Display/static/PlayfairDisplay-Bold.ttf'),
+  });
 
   useEffect(() => {
     async function prepare() {
@@ -49,12 +57,12 @@ export default function RootLayout() {
   }, []);
 
   useEffect(() => {
-    if (appIsReady && !isOnboardingLoading) {
+    if (appIsReady && !isOnboardingLoading && fontsLoaded) {
       SplashScreen.hideAsync();
     }
-  }, [appIsReady, isOnboardingLoading]);
+  }, [appIsReady, isOnboardingLoading, fontsLoaded]);
 
-  if (!appIsReady || isOnboardingLoading) {
+  if (!appIsReady || isOnboardingLoading || !fontsLoaded) {
     return null;
   }
 

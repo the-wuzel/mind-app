@@ -176,7 +176,7 @@ export default function PinSetupScreen() {
                                 setPin('');
                             }}
                         >
-                            <ThemedText style={[styles.lengthText, pinLength === 4 && { color: colors.primaryButton, fontWeight: 'bold' }]}>
+                            <ThemedText style={[styles.lengthText, pinLength === 4 && { color: colors.primaryButton, fontFamily: 'PlusJakartaSans-Bold' }]}>
                                 4 Digits
                             </ThemedText>
                         </TouchableOpacity>
@@ -191,7 +191,7 @@ export default function PinSetupScreen() {
                                 setPin('');
                             }}
                         >
-                            <ThemedText style={[styles.lengthText, pinLength === 6 && { color: colors.primaryButton, fontWeight: 'bold' }]}>
+                            <ThemedText style={[styles.lengthText, pinLength === 6 && { color: colors.primaryButton, fontFamily: 'PlusJakartaSans-Bold' }]}>
                                 6 Digits
                             </ThemedText>
                         </TouchableOpacity>
@@ -231,7 +231,7 @@ const createStyles = (theme: 'light' | 'dark', colors: any) => StyleSheet.create
     },
     title: {
         fontSize: 24,
-        fontWeight: 'bold',
+        fontFamily: 'PlusJakartaSans-Bold',
         marginTop: 16,
         marginBottom: 8,
     },
@@ -300,6 +300,6 @@ const createStyles = (theme: 'light' | 'dark', colors: any) => StyleSheet.create
     },
     numberText: {
         fontSize: 28,
-        fontWeight: '500',
+        fontFamily: 'PlusJakartaSans-SemiBold',
     },
 });

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Platform, ScrollView, StyleSheet, Switch, TouchableOpacity, View } from 'react-native';
+import { Platform, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
@@ -10,8 +10,9 @@ import { useSettings } from '@/context/SettingsContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { router } from 'expo-router';
-import { exportDatabase } from '@/services/database';
+import { exportDatabase, importDatabase } from '@/services/database';
 import { Alert } from 'react-native';
+import { CustomSwitch } from '@/components/CustomSwitch';
 
 export default function SettingsScreen() {
     const { preferences, updatePreference, primaryColor } = useSettings();
@@ -101,7 +102,7 @@ export default function SettingsScreen() {
                                         <ThemedText style={styles.label}>App Lock</ThemedText>
                                         <ThemedText style={styles.subtext}>Require PIN to open app</ThemedText>
                                     </View>
-                                    <Switch
+                                    <CustomSwitch
                                         trackColor={trackColor}
                                         thumbColor={activeThumbColor}
                                         ios_backgroundColor={iosBackgroundColor}
@@ -128,7 +129,7 @@ export default function SettingsScreen() {
                                                 <ThemedText style={styles.label}>Use Face ID / Touch ID</ThemedText>
                                                 <ThemedText style={styles.subtext}>Unlock with biometrics</ThemedText>
                                             </View>
-                                            <Switch
+                                            <CustomSwitch
                                                 trackColor={trackColor}
                                                 thumbColor={activeThumbColor}
                                                 ios_backgroundColor={iosBackgroundColor}
@@ -180,7 +181,7 @@ export default function SettingsScreen() {
                                         <ThemedText style={styles.label}>Dark Mode</ThemedText>
                                         <ThemedText style={styles.subtext}>Switch between light and dark themes</ThemedText>
                                     </View>
-                                    <Switch
+                                    <CustomSwitch
                                         trackColor={trackColor}
                                         thumbColor={activeThumbColor}
                                         ios_backgroundColor={iosBackgroundColor}
@@ -200,7 +201,7 @@ export default function SettingsScreen() {
                                     onPress={() => updatePreference('showDailyQuote', !showDailyQuote)}
                                 >
                                     <ThemedText style={styles.label}>Daily Quote</ThemedText>
-                                    <Switch
+                                    <CustomSwitch
                                         trackColor={trackColor}
                                         thumbColor={activeThumbColor}
                                         ios_backgroundColor={iosBackgroundColor}
@@ -215,7 +216,7 @@ export default function SettingsScreen() {
                                     onPress={() => updatePreference('showMorningRoutine', !showMorningRoutine)}
                                 >
                                     <ThemedText style={styles.label}>Morning Routine</ThemedText>
-                                    <Switch
+                                    <CustomSwitch
                                         trackColor={trackColor}
                                         thumbColor={activeThumbColor}
                                         ios_backgroundColor={iosBackgroundColor}
@@ -235,7 +236,7 @@ export default function SettingsScreen() {
                                     onPress={() => updatePreference('showEveningReflection', !showEveningReflection)}
                                 >
                                     <ThemedText style={styles.label}>Evening Reflection</ThemedText>
-                                    <Switch
+                                    <CustomSwitch
                                         trackColor={trackColor}
                                         thumbColor={activeThumbColor}
                                         ios_backgroundColor={iosBackgroundColor}
@@ -250,7 +251,7 @@ export default function SettingsScreen() {
                                     onPress={() => updatePreference('showDailyGratitude', !showDailyGratitude)}
                                 >
                                     <ThemedText style={styles.label}>Daily Gratitude</ThemedText>
-                                    <Switch
+                                    <CustomSwitch
                                         trackColor={trackColor}
                                         thumbColor={activeThumbColor}
                                         ios_backgroundColor={iosBackgroundColor}
@@ -272,7 +273,7 @@ export default function SettingsScreen() {
                                         <ThemedText style={styles.label}>Morning Reminder</ThemedText>
                                         <ThemedText style={styles.subtext}>Start your day</ThemedText>
                                     </View>
-                                    <Switch
+                                    <CustomSwitch
                                         trackColor={trackColor}
                                         thumbColor={activeThumbColor}
                                         ios_backgroundColor={iosBackgroundColor}
@@ -337,7 +338,7 @@ export default function SettingsScreen() {
                                         <ThemedText style={styles.label}>Evening Reminder</ThemedText>
                                         <ThemedText style={styles.subtext}>Reflect on your day</ThemedText>
                                     </View>
-                                    <Switch
+                                    <CustomSwitch
                                         trackColor={trackColor}
                                         thumbColor={activeThumbColor}
                                         ios_backgroundColor={iosBackgroundColor}
@@ -412,6 +413,39 @@ export default function SettingsScreen() {
                                         <ThemedText style={styles.subtext}>Save your reflections and settings</ThemedText>
                                     </View>
                                 </TouchableOpacity>
+
+                                <View style={styles.divider} />
+
+                                <TouchableOpacity
+                                    style={styles.row}
+                                    activeOpacity={0.7}
+                                    onPress={() => {
+                                        Alert.alert(
+                                            "Import Backup",
+                                            "This will overwrite all current data. Are you sure you want to proceed?",
+                                            [
+                                                { text: "Cancel", style: "cancel" },
+                                                { 
+                                                    text: "Import", 
+                                                    style: "destructive",
+                                                    onPress: async () => {
+                                                        const success = await importDatabase();
+                                                        if (success) {
+                                                            Alert.alert("Success", "Database imported successfully. Please completely close and restart the app to see the changes.");
+                                                        } else {
+                                                            Alert.alert("Error", "Could not import database. Make sure you selected a valid backup file.");
+                                                        }
+                                                    } 
+                                                }
+                                            ]
+                                        );
+                                    }}
+                                >
+                                    <View>
+                                        <ThemedText style={styles.label}>Import Backup</ThemedText>
+                                        <ThemedText style={styles.subtext}>Restore your data from a backup file</ThemedText>
+                                    </View>
+                                </TouchableOpacity>
                             </ThemedView>
                         </View>
                     </ThemedView>
@@ -449,7 +483,7 @@ export const createStyles = (theme: 'light' | 'dark', colors: any) => StyleSheet
     },
     sectionTitle: {
         fontSize: 18,
-        fontWeight: 'bold',
+        fontFamily: 'PlusJakartaSans-Bold',
         marginBottom: 8,
         color: colors.textPrimary,
         opacity: 0.9,
@@ -480,7 +514,7 @@ export const createStyles = (theme: 'light' | 'dark', colors: any) => StyleSheet
     timeText: {
         fontSize: 16,
         color: colors.textPrimary,
-        fontWeight: '500',
+        fontFamily: 'PlusJakartaSans-SemiBold',
     },
     divider: {
         height: 1,

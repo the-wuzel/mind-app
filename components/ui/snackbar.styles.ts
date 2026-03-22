@@ -35,7 +35,7 @@ export const createStyles = (theme: 'light' | 'dark', colors: typeof Colors.ligh
     message: {
         color: '#fff', // Always white on dark snackbar
         fontSize: 16,
-        fontWeight: '500',
+        fontFamily: 'PlusJakartaSans-SemiBold',
     },
     undoButton: {
         paddingVertical: 6,
@@ -46,7 +46,7 @@ export const createStyles = (theme: 'light' | 'dark', colors: typeof Colors.ligh
     undoText: {
         color: colors.primaryButton,
         fontSize: 16,
-        fontWeight: '600',
+        fontFamily: 'PlusJakartaSans-SemiBold',
     },
     progressBar: {
         position: 'absolute',

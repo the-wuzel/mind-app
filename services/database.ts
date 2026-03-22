@@ -342,6 +342,7 @@ export const updateMorningRoutineItemStatus = async (id: number, checked: boolea
 
 import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
+import * as DocumentPicker from 'expo-document-picker';
 
 export const exportDatabase = async () => {
     try {
@@ -394,3 +395,66 @@ export const exportDatabase = async () => {
         return false;
     }
 };
+
+export const importDatabase = async () => {
+    try {
+        const result = await DocumentPicker.getDocumentAsync({
+            copyToCacheDirectory: true,
+            type: ['application/octet-stream', 'application/x-sqlite3', 'application/vnd.sqlite3', '*/*']
+        });
+
+        if (result.canceled || !result.assets || result.assets.length === 0) {
+            return false;
+        }
+
+        const pickedFileUri = result.assets[0].uri;
+        const sourceFile = new File(pickedFileUri.startsWith('file://') ? pickedFileUri : `file://${pickedFileUri}`);
+
+        if (!sourceFile.exists) {
+            console.error("Selected file does not exist at:", sourceFile.uri);
+            return false;
+        }
+
+        const db = await getDb();
+        
+        // In Expo SDK 50+, db object contains databasePath
+        let dbFilePath = (db as any).databasePath;
+        let dbFile: File;
+        
+        if (dbFilePath) {
+            const dbUri = dbFilePath.startsWith('file://') ? dbFilePath : `file://${dbFilePath}`;
+            dbFile = new File(dbUri);
+        } else {
+            // Fallback
+            dbFile = new File(Paths.document, 'SQLite', 'mindApp.db');
+        }
+
+        // Close the database to release the file lock
+        try {
+            if (typeof db.closeAsync === 'function') {
+                await db.closeAsync();
+            } else if (typeof (db as any).closeSync === 'function') {
+                (db as any).closeSync();
+            }
+        } catch (e) {
+            console.log("Could not close db:", e);
+        }
+        dbPromise = null;
+
+        // Overwrite the existing database file
+        if (dbFile.exists) {
+            dbFile.delete();
+        }
+        
+        sourceFile.copy(dbFile);
+
+        // Re-initialize the database connection to use the imported file
+        await getDb();
+
+        return true;
+    } catch (error) {
+        console.error("Error importing database:", error);
+        return false;
+    }
+};
+

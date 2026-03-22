@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
     },
     textStyle: {
         color: 'white',
-        fontWeight: 'bold',
+        fontFamily: 'PlusJakartaSans-Bold',
         textAlign: 'center',
     },
 });

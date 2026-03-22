@@ -23,11 +23,12 @@ export const createStyles = (theme: 'light' | 'dark', colors: typeof Colors.ligh
     quoteTitle: {
         marginBottom: 12,
         fontSize: 20,
-        fontWeight: '700',
+        fontFamily: 'PlusJakartaSans-Bold',
         color: colors.textPrimary,
     },
     quoteText: {
         fontSize: 16,
+        fontFamily: 'PlusJakartaSans-Regular',
         fontStyle: 'italic',
         lineHeight: 26,
         color: colors.textSecondary,
@@ -70,7 +71,7 @@ export const createStyles = (theme: 'light' | 'dark', colors: typeof Colors.ligh
     },
     saveButtonText: {
         color: '#fff', // Always white on primary button
-        fontWeight: '700',
+        fontFamily: 'PlusJakartaSans-Bold',
         fontSize: 16,
     },
     gratitudeList: {
@@ -142,7 +143,7 @@ export const createStyles = (theme: 'light' | 'dark', colors: typeof Colors.ligh
     routineTitle: {
         marginBottom: 16,
         fontSize: 20,
-        fontWeight: '700',
+        fontFamily: 'PlusJakartaSans-Bold',
         color: colors.textPrimary,
     },
     routineItem: {
