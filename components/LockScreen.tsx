@@ -351,7 +351,7 @@ const createStyles = (theme: 'light' | 'dark', colors: any) => StyleSheet.create
         width: 72,
         height: 72,
         borderRadius: 36,
-        backgroundColor: colors.cardBackground,
+        backgroundColor: colors.backgroundSecondary,
         justifyContent: 'center',
         alignItems: 'center',
         borderWidth: 1,

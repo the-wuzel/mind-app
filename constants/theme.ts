@@ -10,13 +10,13 @@ const tintColorDark = '#fff';
 export const Colors = {
   light: {
     text: '#11181C',
-    background: '#fff',
+    background: '#f5f5f5',
     tint: tintColorLight,
     icon: '#687076',
     tabIconDefault: '#687076',
     tabIconSelected: tintColorLight,
     // Semantic tokens
-    cardBackground: '#f8f9fa',
+    backgroundSecondary: '#ffffff',
     cardBorder: '#e9ecef',
     textPrimary: '#11181C',
     textSecondary: '#687076',
@@ -24,7 +24,7 @@ export const Colors = {
     iconPrimary: '#11181C',
     iconSecondary: '#687076',
     iconTertiary: '#8D969E',
-    inputBackground: '#f1f3f5',
+    backgroundTertiary: '#f5f5f5', // same as background
     primaryButton: '#0a7ea4',
     deleteIcon: '#dc3545',
     successIcon: '#28a745',
@@ -41,7 +41,7 @@ export const Colors = {
     tabIconDefault: '#9BA1A6',
     tabIconSelected: tintColorDark,
     // Semantic tokens
-    cardBackground: 'rgba(255, 255, 255, 0.08)',
+    backgroundSecondary: 'rgba(255, 255, 255, 0.08)',
     cardBorder: 'rgba(255, 255, 255, 0.1)',
     textPrimary: '#ECEDEE',
     textSecondary: 'rgba(255, 255, 255, 0.9)',
@@ -49,7 +49,7 @@ export const Colors = {
     iconPrimary: '#ECEDEE',
     iconSecondary: 'rgba(255, 255, 255, 0.7)',
     iconTertiary: 'rgba(255, 255, 255, 0.5)',
-    inputBackground: 'rgba(0, 0, 0, 0.2)',
+    backgroundTertiary: 'rgba(0, 0, 0, 0.2)',
     primaryButton: '#0a7ea4',
     deleteIcon: '#ff6b6b',
     successIcon: '#0a7ea4',

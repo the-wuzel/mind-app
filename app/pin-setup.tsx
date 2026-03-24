@@ -250,7 +250,7 @@ const createStyles = (theme: 'light' | 'dark', colors: any) => StyleSheet.create
         borderRadius: 20,
         borderWidth: 1,
         borderColor: colors.cardBorder,
-        backgroundColor: colors.cardBackground,
+        backgroundColor: colors.backgroundSecondary,
     },
     lengthText: {
         fontSize: 14,
@@ -292,7 +292,7 @@ const createStyles = (theme: 'light' | 'dark', colors: any) => StyleSheet.create
         width: 72,
         height: 72,
         borderRadius: 36,
-        backgroundColor: colors.cardBackground,
+        backgroundColor: colors.backgroundSecondary,
         justifyContent: 'center',
         alignItems: 'center',
         borderWidth: 1,

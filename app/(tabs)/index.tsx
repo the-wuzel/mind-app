@@ -1,6 +1,6 @@
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, KeyboardAvoidingView, LayoutAnimation, Platform, ScrollView, TextInput, TouchableOpacity, UIManager, View } from 'react-native';
+import { Alert, KeyboardAvoidingView, LayoutAnimation, Platform, TextInput, TouchableOpacity, UIManager, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
@@ -405,7 +405,7 @@ function GratitudePrompt({ onFocus, onAdd }: GratitudePromptProps) {
                 <TouchableOpacity
                   style={styles.gratitudeContent}
                   onPress={() => startEditing(item)}>
-                  <ThemedText style={styles.gratitudeText}>• {item.content}</ThemedText>
+                  <ThemedText style={styles.gratitudeText}>{item.content}</ThemedText>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={() => handleDelete(item.id)}>
                   <IconSymbol name="trash.fill" size={20} color={colors.deleteIcon} />

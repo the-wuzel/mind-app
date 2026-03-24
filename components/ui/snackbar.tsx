@@ -120,8 +120,8 @@ export function Snackbar({ message, onUndo, onDismiss, visible, duration = 4000 
                     <TouchableOpacity onPress={onUndo} style={styles.undoButton}>
                         <ThemedText style={styles.undoText}>Undo</ThemedText>
                     </TouchableOpacity>
+                    <Animated.View style={[styles.progressBar, progressStyle]} />
                 </ThemedView>
-                <Animated.View style={[styles.progressBar, progressStyle]} />
             </Animated.View>
         </GestureDetector>
     );

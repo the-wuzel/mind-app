@@ -14,7 +14,7 @@ export const createStyles = (theme: 'light' | 'dark', colors: typeof Colors.ligh
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        backgroundColor: colors.snackbarBackground,
+        backgroundColor: colors.background,
         borderRadius: 12,
         padding: 16,
         shadowColor: colors.shadow,
@@ -23,7 +23,7 @@ export const createStyles = (theme: 'light' | 'dark', colors: typeof Colors.ligh
         shadowRadius: 5,
         elevation: 8,
         borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.1)', // Keep subtle border for dark bg
+        borderColor: colors.cardBorder,
         overflow: 'hidden',
     },
     textContainer: {
@@ -33,14 +33,14 @@ export const createStyles = (theme: 'light' | 'dark', colors: typeof Colors.ligh
         backgroundColor: 'transparent',
     },
     message: {
-        color: '#fff', // Always white on dark snackbar
+        color: colors.textPrimary,
         fontSize: 16,
         fontFamily: 'PlusJakartaSans-SemiBold',
     },
     undoButton: {
         paddingVertical: 6,
         paddingHorizontal: 12,
-        backgroundColor: 'rgba(10, 126, 164, 0.1)', // Could be parameterized if strictly needed
+        backgroundColor: colors.cardBorder,
         borderRadius: 8,
     },
     undoText: {

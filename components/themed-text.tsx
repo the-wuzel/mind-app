@@ -46,7 +46,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 32,
-    lineHeight: 32,
+    lineHeight: 40,
     fontFamily: 'PlayfairDisplay-Bold',
   },
   subtitle: {

@@ -14,9 +14,14 @@ import { useSettings } from '@/context/SettingsContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 
-type MemoryItem =
+type SingleMemoryItem =
     | { type: 'reflection', data: Reflection }
     | { type: 'gratitude', data: { id: number, content: string, date: string } }
+    | { type: 'quote', data: { id: number, text: string, author: string, date: string } };
+
+type MemoryItem =
+    | { type: 'reflection', data: Reflection }
+    | { type: 'gratitude_group', data: { id: string, date: string, items: { id: number, content: string, date: string }[] } }
     | { type: 'quote', data: { id: number, text: string, author: string, date: string } };
 
 type SectionData = { title: string; data: MemoryItem[] };
@@ -34,22 +39,43 @@ export default function MemoriesScreen() {
 
     const styles = useMemo(() => createStyles(colorScheme, colors), [colorScheme, colors]);
     const [deleteModalVisible, setDeleteModalVisible] = useState(false);
-    const [itemToDelete, setItemToDelete] = useState<MemoryItem | null>(null);
+    const [itemToDelete, setItemToDelete] = useState<SingleMemoryItem | null>(null);
 
-    const totalEntries = useMemo(() => memories.reduce((acc, section) => acc + section.data.length, 0), [memories]);
+    const totalEntries = useMemo(() => memories.reduce((acc, section) => {
+        return acc + section.data.reduce((secAcc, item) => {
+            if (item.type === 'gratitude_group') return secAcc + item.data.items.length;
+            return secAcc + 1;
+        }, 0);
+    }, 0), [memories]);
 
-    const groupMemories = (items: MemoryItem[]) => {
+    const groupMemories = (items: SingleMemoryItem[]) => {
         return items.reduce((acc, current) => {
             const dateStr = new Date(current.data.date).toLocaleDateString(undefined, {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric'
             });
-            const section = acc.find(s => s.title === dateStr);
-            if (section) {
-                section.data.push(current);
+            let section = acc.find(s => s.title === dateStr);
+            if (!section) {
+                section = { title: dateStr, data: [] };
+                acc.push(section);
+            }
+            if (current.type === 'gratitude') {
+                const existingGroup = section.data.find(item => item.type === 'gratitude_group') as Extract<MemoryItem, { type: 'gratitude_group' }> | undefined;
+                if (existingGroup) {
+                    existingGroup.data.items.push(current.data);
+                } else {
+                    section.data.push({
+                        type: 'gratitude_group',
+                        data: {
+                            id: `gratitude-group-${current.data.id}`,
+                            date: current.data.date,
+                            items: [current.data]
+                        }
+                    });
+                }
             } else {
-                acc.push({ title: dateStr, data: [current] });
+                section.data.push(current as MemoryItem);
             }
             return acc;
         }, [] as SectionData[]);
@@ -64,7 +90,7 @@ export default function MemoriesScreen() {
                     getSavedQuotes()
                 ]);
 
-                const combined: MemoryItem[] = [
+                const combined: SingleMemoryItem[] = [
                     ...reflections.map(r => ({ type: 'reflection' as const, data: r })),
                     ...gratitudes.map(g => ({ type: 'gratitude' as const, data: g })),
                     ...quotes.map(q => ({ type: 'quote' as const, data: q }))
@@ -76,7 +102,7 @@ export default function MemoriesScreen() {
         }, [])
     );
 
-    const handleDelete = (item: MemoryItem) => {
+    const handleDelete = (item: SingleMemoryItem) => {
         setItemToDelete(item);
         setDeleteModalVisible(true);
     };
@@ -100,7 +126,7 @@ export default function MemoriesScreen() {
                 getSavedQuotes()
             ]);
 
-            const combined: MemoryItem[] = [
+            const combined: SingleMemoryItem[] = [
                 ...reflections.map(r => ({ type: 'reflection' as const, data: r })),
                 ...gratitudes.map(g => ({ type: 'gratitude' as const, data: g })),
                 ...quotes.map(q => ({ type: 'quote' as const, data: q }))
@@ -130,17 +156,31 @@ export default function MemoriesScreen() {
                     </ThemedView>
                 </TouchableOpacity>
             );
-        } else if (item.type === 'gratitude') {
+        } else if (item.type === 'gratitude_group') {
             return (
-                <TouchableOpacity onLongPress={() => handleDelete(item)} activeOpacity={0.8}>
-                    <ThemedView style={styles.card}>
-                        <View style={[styles.labelContainer, { backgroundColor: colors.primaryButton + '26' }]}>
-                            <IconSymbol name="heart.fill" size={14} color={colors.primaryButton} />
-                            <ThemedText style={styles.label}>Daily Gratitude</ThemedText>
-                        </View>
-                        <ThemedText style={styles.answer}>{item.data.content}</ThemedText>
-                    </ThemedView>
-                </TouchableOpacity>
+                <ThemedView style={styles.card}>
+                    <View style={[styles.labelContainer, { backgroundColor: colors.primaryButton + '26' }]}>
+                        <IconSymbol name="heart.fill" size={14} color={colors.primaryButton} />
+                        <ThemedText style={styles.label}>
+                            {item.data.items.length > 1 ? 'Daily Gratitudes' : 'Daily Gratitude'}
+                        </ThemedText>
+                    </View>
+                    <View style={styles.gratitudeList}>
+                        {item.data.items.map((g) => (
+                            <TouchableOpacity 
+                                key={g.id} 
+                                onLongPress={() => handleDelete({ type: 'gratitude', data: g })} 
+                                activeOpacity={0.8}
+                                style={styles.gratitudeItem}
+                            >
+                                {item.data.items.length > 1 && (
+                                    <View style={[styles.bulletPoint, { backgroundColor: colors.textPrimary }]} />
+                                )}
+                                <ThemedText style={[styles.answer, { flex: 1 }]}>{g.content}</ThemedText>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+                </ThemedView>
             );
         } else {
             return (
@@ -231,7 +271,7 @@ export const createStyles = (theme: 'light' | 'dark', colors: any) => StyleSheet
         padding: 16,
         borderRadius: 12,
         borderWidth: 1,
-        backgroundColor: colors.cardBackground,
+        backgroundColor: colors.backgroundSecondary,
         borderColor: colors.cardBorder,
     },
     prompt: {
@@ -268,5 +308,21 @@ export const createStyles = (theme: 'light' | 'dark', colors: any) => StyleSheet
     emptyContainer: {
         marginTop: 20,
         alignItems: 'center',
+    },
+    gratitudeList: {
+        gap: 8,
+    },
+    gratitudeItem: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        gap: 12,
+        paddingVertical: 2,
+    },
+    bulletPoint: {
+        width: 4,
+        height: 4,
+        borderRadius: 2,
+        marginTop: 8,
+        opacity: 0.6,
     }
 });

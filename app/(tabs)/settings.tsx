@@ -8,7 +8,7 @@ import { ColorPalette, Colors } from '@/constants/theme';
 import { useAuth } from '@/context/AuthContext';
 import { useSettings } from '@/context/SettingsContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import { CustomTimePicker } from '@/components/ui/CustomTimePicker';
 import { router } from 'expo-router';
 import { exportDatabase, importDatabase } from '@/services/database';
 import { Alert } from 'react-native';
@@ -283,48 +283,13 @@ export default function SettingsScreen() {
                                 </TouchableOpacity>
 
                                 {morningNotificationEnabled && (
-                                    <>
-                                        {Platform.OS === 'ios' ? (
-                                            <View style={styles.row}>
-                                                <ThemedText style={styles.label}>Time</ThemedText>
-                                                <DateTimePicker
-                                                    value={getMorningDate()}
-                                                    mode="time"
-                                                    display="default"
-                                                    onChange={(event, date) => {
-                                                        if (date) {
-                                                            updatePreference('morningNotificationHour', date.getHours());
-                                                            updatePreference('morningNotificationMinute', date.getMinutes());
-                                                        }
-                                                    }}
-                                                    themeVariant={colorScheme}
-                                                />
-                                            </View>
-                                        ) : (
-                                            <TouchableOpacity 
-                                                style={styles.row}
-                                                onPress={() => setShowMorningPicker(true)}
-                                            >
-                                                <ThemedText style={styles.label}>Time</ThemedText>
-                                                <ThemedText style={styles.timeText}>{formatTime(morningNotificationHour, morningNotificationMinute)}</ThemedText>
-                                            </TouchableOpacity>
-                                        )}
-                                        {Platform.OS === 'android' && showMorningPicker && (
-                                            <DateTimePicker
-                                                value={getMorningDate()}
-                                                mode="time"
-                                                is24Hour={true}
-                                                display="default"
-                                                onChange={(event, date) => {
-                                                    setShowMorningPicker(false);
-                                                    if (date) {
-                                                        updatePreference('morningNotificationHour', date.getHours());
-                                                        updatePreference('morningNotificationMinute', date.getMinutes());
-                                                    }
-                                                }}
-                                            />
-                                        )}
-                                    </>
+                                    <TouchableOpacity 
+                                        style={styles.row}
+                                        onPress={() => setShowMorningPicker(true)}
+                                    >
+                                        <ThemedText style={styles.label}>Time</ThemedText>
+                                        <ThemedText style={styles.timeText}>{formatTime(morningNotificationHour, morningNotificationMinute)}</ThemedText>
+                                    </TouchableOpacity>
                                 )}
 
                                 <View style={styles.divider} />
@@ -348,48 +313,13 @@ export default function SettingsScreen() {
                                 </TouchableOpacity>
 
                                 {eveningNotificationEnabled && (
-                                    <>
-                                        {Platform.OS === 'ios' ? (
-                                            <View style={styles.row}>
-                                                <ThemedText style={styles.label}>Time</ThemedText>
-                                                <DateTimePicker
-                                                    value={getEveningDate()}
-                                                    mode="time"
-                                                    display="default"
-                                                    onChange={(event, date) => {
-                                                        if (date) {
-                                                            updatePreference('eveningNotificationHour', date.getHours());
-                                                            updatePreference('eveningNotificationMinute', date.getMinutes());
-                                                        }
-                                                    }}
-                                                    themeVariant={colorScheme}
-                                                />
-                                            </View>
-                                        ) : (
-                                            <TouchableOpacity 
-                                                style={styles.row}
-                                                onPress={() => setShowEveningPicker(true)}
-                                            >
-                                                <ThemedText style={styles.label}>Time</ThemedText>
-                                                <ThemedText style={styles.timeText}>{formatTime(eveningNotificationHour, eveningNotificationMinute)}</ThemedText>
-                                            </TouchableOpacity>
-                                        )}
-                                        {Platform.OS === 'android' && showEveningPicker && (
-                                            <DateTimePicker
-                                                value={getEveningDate()}
-                                                mode="time"
-                                                is24Hour={true}
-                                                display="default"
-                                                onChange={(event, date) => {
-                                                    setShowEveningPicker(false);
-                                                    if (date) {
-                                                        updatePreference('eveningNotificationHour', date.getHours());
-                                                        updatePreference('eveningNotificationMinute', date.getMinutes());
-                                                    }
-                                                }}
-                                            />
-                                        )}
-                                    </>
+                                    <TouchableOpacity 
+                                        style={styles.row}
+                                        onPress={() => setShowEveningPicker(true)}
+                                    >
+                                        <ThemedText style={styles.label}>Time</ThemedText>
+                                        <ThemedText style={styles.timeText}>{formatTime(eveningNotificationHour, eveningNotificationMinute)}</ThemedText>
+                                    </TouchableOpacity>
                                 )}
 
                             </ThemedView>
@@ -450,6 +380,28 @@ export default function SettingsScreen() {
                         </View>
                     </ThemedView>
                 </ScrollView>
+                <CustomTimePicker
+                    visible={showMorningPicker}
+                    onClose={() => setShowMorningPicker(false)}
+                    onSave={(date) => {
+                        updatePreference('morningNotificationHour', date.getHours());
+                        updatePreference('morningNotificationMinute', date.getMinutes());
+                        setShowMorningPicker(false);
+                    }}
+                    initialDate={getMorningDate()}
+                    title="Morning Reminder"
+                />
+                <CustomTimePicker
+                    visible={showEveningPicker}
+                    onClose={() => setShowEveningPicker(false)}
+                    onSave={(date) => {
+                        updatePreference('eveningNotificationHour', date.getHours());
+                        updatePreference('eveningNotificationMinute', date.getMinutes());
+                        setShowEveningPicker(false);
+                    }}
+                    initialDate={getEveningDate()}
+                    title="Evening Reminder"
+                />
             </SafeAreaView>
         </ThemedView>
     );
@@ -492,7 +444,7 @@ export const createStyles = (theme: 'light' | 'dark', colors: any) => StyleSheet
         padding: 16,
         borderRadius: 12,
         borderWidth: 1,
-        backgroundColor: colors.cardBackground,
+        backgroundColor: colors.backgroundSecondary,
         borderColor: colors.cardBorder,
         gap: 12,
     },
