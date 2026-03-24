@@ -19,7 +19,7 @@ export default function TabLayout() {
         tabBarButton: HapticTab,
         tabBarHideOnKeyboard: true,
         tabBarStyle: {
-          paddingTop: 8,
+          paddingTop: 4,
           paddingBottom: Platform.OS === 'ios' ? 20 : 16,
           height: Platform.OS === 'ios' ? 82 : 70,
         },
