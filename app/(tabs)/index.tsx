@@ -1,10 +1,11 @@
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, KeyboardAvoidingView, LayoutAnimation, Platform, TextInput, TouchableOpacity, UIManager, View } from 'react-native';
+import { Alert, KeyboardAvoidingView, LayoutAnimation, Platform, TextInput, TouchableOpacity, UIManager, View, findNodeHandle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { ConfirmationModal } from '@/components/ui/confirmation-modal';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/theme';
 import { useSettings } from '@/context/SettingsContext';
@@ -275,15 +276,18 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
 interface GratitudePromptProps {
   onFocus?: () => void;
   onAdd?: () => void;
+  onEditFocus?: (nodeHandle: number) => void;
 }
 
-function GratitudePrompt({ onFocus, onAdd }: GratitudePromptProps) {
+function GratitudePrompt({ onFocus, onAdd, onEditFocus }: GratitudePromptProps) {
   const [gratitudes, setGratitudes] = useState<{ id: number, content: string }[]>([]);
   const [newGratitude, setNewGratitude] = useState('');
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editContent, setEditContent] = useState('');
   const { showSnackbar, hideSnackbar } = useSnackbar();
   const { styles, colors } = useThemeStyles();
+  const [itemToDelete, setItemToDelete] = useState<number | null>(null);
+  const itemRefs = useRef<{ [key: number]: View | null }>({});
 
   const loadGratitudes = useCallback(async () => {
     const data = await getTodayGratitudes();
@@ -380,39 +384,43 @@ function GratitudePrompt({ onFocus, onAdd }: GratitudePromptProps) {
 
       <ThemedView style={styles.gratitudeList}>
         {gratitudes.filter(item => item.id !== pendingDeleteId).map((item) => (
-          <ThemedView key={item.id} style={styles.gratitudeItemRow}>
-            {editingId === item.id ? (
-              <ThemedView style={styles.editContainer}>
-                <TextInput
-                  style={styles.editInput}
-                  value={editContent}
-                  onChangeText={setEditContent}
-                  autoFocus
-                  placeholderTextColor={colors.textTertiary}
-                />
-                <TouchableOpacity onPress={() => handleUpdate(item.id)}>
-                  <IconSymbol name="checkmark.circle.fill" size={24} color={colors.successIcon} />
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => handleDelete(item.id)}>
-                  <IconSymbol name="trash.fill" size={24} color={colors.deleteIcon} />
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => setEditingId(null)}>
-                  <IconSymbol name="xmark.circle.fill" size={24} color={colors.cancelIcon} />
-                </TouchableOpacity>
-              </ThemedView>
-            ) : (
-              <>
+          <View 
+            key={item.id} 
+            ref={(el) => { itemRefs.current[item.id] = el; }}
+            collapsable={false}
+          >
+            <ThemedView style={styles.gratitudeItemRow}>
+              {editingId === item.id ? (
+                <ThemedView style={styles.editContainer}>
+                  <TextInput
+                    style={styles.editInput}
+                    value={editContent}
+                    onChangeText={setEditContent}
+                    autoFocus
+                    placeholderTextColor={colors.textTertiary}
+                    onBlur={() => handleUpdate(item.id)}
+                    onSubmitEditing={() => handleUpdate(item.id)}
+                    returnKeyType="done"
+                    onFocus={() => {
+                      const handle = findNodeHandle(itemRefs.current[item.id]);
+                      if (handle && onEditFocus) {
+                        onEditFocus(handle);
+                      }
+                    }}
+                  />
+                </ThemedView>
+              ) : (
                 <TouchableOpacity
                   style={styles.gratitudeContent}
-                  onPress={() => startEditing(item)}>
+                  onPress={() => startEditing(item)}
+                  onLongPress={() => {
+                    setItemToDelete(item.id);
+                  }}>
                   <ThemedText style={styles.gratitudeText}>{item.content}</ThemedText>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => handleDelete(item.id)}>
-                  <IconSymbol name="trash.fill" size={20} color={colors.deleteIcon} />
-                </TouchableOpacity>
-              </>
-            )}
-          </ThemedView>
+              )}
+            </ThemedView>
+          </View>
         ))}
       </ThemedView>
 
@@ -438,6 +446,19 @@ function GratitudePrompt({ onFocus, onAdd }: GratitudePromptProps) {
           <IconSymbol name="arrow.up" size={20} color="#fff" />
         </TouchableOpacity>
       </ThemedView>
+
+      <ConfirmationModal
+        visible={itemToDelete !== null}
+        onClose={() => setItemToDelete(null)}
+        onConfirm={() => {
+          if (itemToDelete !== null) {
+            handleDelete(itemToDelete);
+            setItemToDelete(null);
+          }
+        }}
+        title="Delete Gratitude"
+        message="Are you sure you want to delete this gratitude?"
+      />
     </ThemedView>
   );
 }
@@ -505,7 +526,24 @@ function ReflectionPrompt() {
 export default function HomeScreen() {
   const [hours, setHours] = useState(new Date().getHours());
   const scrollRef = useRef<any>(null);
+  const innerRef = useRef<View>(null);
   const { styles } = useThemeStyles();
+
+  const handleEditFocus = (nodeHandle: number) => {
+    setTimeout(() => {
+      const innerHandle = findNodeHandle(innerRef.current);
+      if (nodeHandle && innerHandle && scrollRef.current) {
+        UIManager.measureLayout(
+          nodeHandle,
+          innerHandle,
+          () => { console.warn("Measure failed"); },
+          (left, top, width, height) => {
+            scrollRef.current?.scrollTo({ y: Math.max(0, top - 80), animated: true });
+          }
+        );
+      }
+    }, 100);
+  };
 
   useEffect(() => {
     // Update hours every minute to ensure correct greeting/content even if app stays open
@@ -545,25 +583,27 @@ export default function HomeScreen() {
             contentContainerStyle={{ paddingBottom: 40 }}
             keyboardShouldPersistTaps="handled"
           >
-            <ThemedText type="title" style={styles.header}>{getGreeting()}, Thomas</ThemedText>
-            {isEvening ? (
-              <>
-                {showEveningReflection && <ReflectionPrompt />}
-                {showDailyGratitude && <GratitudePrompt onFocus={handleInputFocus} onAdd={handleInputFocus} />}
-              </>
-            ) : (
-              <>
-                {showDailyQuote && <QuoteOfTheDay />}
-                {showMorningRoutine && <MorningRoutine />}
-              </>
-            )}
-            {/* Show a message if all features for the time of day are disabled */}
-            {isEvening && !showEveningReflection && !showDailyGratitude && (
-              <ThemedText style={{ textAlign: 'center', marginTop: 40, opacity: 0.6 }}>No evening activities enabled.</ThemedText>
-            )}
-            {!isEvening && !showDailyQuote && !showMorningRoutine && (
-              <ThemedText style={{ textAlign: 'center', marginTop: 40, opacity: 0.6 }}>No morning activities enabled.</ThemedText>
-            )}
+            <View ref={innerRef} collapsable={false} style={{ flex: 1 }}>
+              <ThemedText type="title" style={styles.header}>{getGreeting()}, Thomas</ThemedText>
+              {isEvening ? (
+                <>
+                  {showEveningReflection && <ReflectionPrompt />}
+                  {showDailyGratitude && <GratitudePrompt onFocus={handleInputFocus} onAdd={handleInputFocus} onEditFocus={handleEditFocus} />}
+                </>
+              ) : (
+                <>
+                  {showDailyQuote && <QuoteOfTheDay />}
+                  {showMorningRoutine && <MorningRoutine />}
+                </>
+              )}
+              {/* Show a message if all features for the time of day are disabled */}
+              {isEvening && !showEveningReflection && !showDailyGratitude && (
+                <ThemedText style={{ textAlign: 'center', marginTop: 40, opacity: 0.6 }}>No evening activities enabled.</ThemedText>
+              )}
+              {!isEvening && !showDailyQuote && !showMorningRoutine && (
+                <ThemedText style={{ textAlign: 'center', marginTop: 40, opacity: 0.6 }}>No morning activities enabled.</ThemedText>
+              )}
+            </View>
           </NestableScrollContainer>
         </KeyboardAvoidingView>
       </SafeAreaView>

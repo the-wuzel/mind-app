@@ -94,7 +94,7 @@ export const createStyles = (theme: 'light' | 'dark', colors: typeof Colors.ligh
     },
     gratitudeContent: {
         flex: 1,
-        marginRight: 12,
+        marginRight: 0,
         backgroundColor: 'transparent'
     },
     gratitudeText: {
